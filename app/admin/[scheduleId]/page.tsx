@@ -219,7 +219,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Category Name</Label>
               <Input
-                value={newCategory.title}
+                value={newCategory.title ?? ""}
                 onChange={(e) =>
                   setNewCategory({ ...newCategory, title: e.target.value })
                 }
@@ -230,7 +230,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Instructor</Label>
               <Input
-                value={newCategory.instructor}
+                value={newCategory.instructor ?? ""}
                 onChange={(e) => {
                   setNewCategory({
                     ...newCategory,
@@ -244,7 +244,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Slot</Label>
               <Input
-                value={newCategory.slot}
+                value={newCategory.slot ?? 0}
                 type="number"
                 min={0}
                 onChange={(e) => {
@@ -260,7 +260,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Description</Label>
               <Textarea
-                value={newCategory.desc}
+                value={newCategory.desc ?? ""}
                 onChange={(e) => {
                   setNewCategory({ ...newCategory, desc: e.target.value });
                 }}
@@ -298,7 +298,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Category Name</Label>
               <Input
-                value={selectCategory?.title}
+                value={selectCategory?.title ?? ""}
                 onChange={(e) =>
                   setSelectCategory({
                     ...selectCategory,
@@ -312,7 +312,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Instructor</Label>
               <Input
-                value={selectCategory?.instructor}
+                value={selectCategory?.instructor ?? ""}
                 onChange={(e) => {
                   setSelectCategory({
                     ...selectCategory,
@@ -326,7 +326,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Slot</Label>
               <Input
-                value={selectCategory?.slot}
+                value={selectCategory?.slot ?? 0}
                 type="number"
                 min={0}
                 onChange={(e) => {
@@ -342,7 +342,7 @@ export default function CategoryAdminPage() {
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Description</Label>
               <Textarea
-                value={selectCategory?.desc}
+                value={selectCategory?.desc ?? ""}
                 onChange={(e) => {
                   setSelectCategory({
                     ...selectCategory,
@@ -361,12 +361,12 @@ export default function CategoryAdminPage() {
               size={"lg"}
               onClick={handleEdit}
               disabled={
-                !newCategory.title ||
-                !newCategory.instructor ||
-                !newCategory.slot
+                !selectCategory?.title ||
+                !selectCategory?.instructor ||
+                !selectCategory?.slot
               }
             >
-              Create
+              Update
             </Button>
           </div>
         </SheetContent>

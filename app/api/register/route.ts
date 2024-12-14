@@ -21,12 +21,27 @@ export const POST = async (req: NextRequest) => {
       where: {
         id: categoryId,
       },
+      select: {
+        id: true,
+        schedule: {
+          select: {
+            status: true,
+          },
+        },
+      },
     });
 
     if (!category) {
       return NextResponse.json(
         { error: "Category not found" },
         { status: 404 }
+      );
+    }
+
+    if (category.schedule.status !== "ACTIVE") {
+      return NextResponse.json(
+        { error: "Schedule is not active" },
+        { status: 400 }
       );
     }
 

@@ -2,9 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { ScheduleStatusEnum } from "@prisma/client";
 
+export const GET = async (req: NextRequest) => {
+  const scheduleId = req.nextUrl.pathname.split("/").pop();
+
+  try {
+    const schedule = await prisma.schedule.findUnique({
+      where: {
+        id: scheduleId,
+      },
+    });
+
+    if (!schedule) {
+      return NextResponse.json(
+        { message: "Schedule not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(schedule, { status: 200 });
+  } catch (error) {
+    console.error("Failed to fetch schedule", error);
+    return NextResponse.json(
+      { message: "Failed to fetch schedule" },
+      { status: 500 }
+    );
+  }
+};
+
 export const DELETE = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
-  console.log(scheduleId);
 
   try {
     const schedule = await prisma.schedule.delete({

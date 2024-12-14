@@ -13,7 +13,7 @@ export default function Layout({
 }>) {
   const router = useRouter();
   const [otp, setOTP] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isWrong, setIsWrong] = useState(false);
 
   const handleVerify = () => {
@@ -29,6 +29,14 @@ export default function Layout({
     const verified = window.sessionStorage.getItem("verified") === "true";
     setIsVerified(verified);
   }, []);
+
+  if (isVerified === null) {
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        Loading...
+      </div>
+    );
+  }
 
   if (!isVerified) {
     return (
