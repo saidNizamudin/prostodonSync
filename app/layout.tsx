@@ -34,7 +34,7 @@ export default function RootLayout({
           <Toaster />
           {children}
         </main>
-        <footer className="absolute bottom-0 w-dvw flex justify-center items-center h-10 z-[99999]">
+        <footer className="absolute bottom-0 w-dvw flex justify-center items-center h-10 z-[99999] bg-white">
           <span>
             Created by{" "}
             <Link

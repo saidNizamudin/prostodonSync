@@ -75,7 +75,7 @@ export default function CategoryPage() {
     try {
       setRegisterIds((prev) => [...prev, payload.category]);
       const { name, notes, category } = payload;
-      const { data } = await axios.post("/api/register", {
+      const { data: newData } = await axios.post("/api/register", {
         categoryId: category,
         payload: {
           name,
@@ -83,11 +83,11 @@ export default function CategoryPage() {
         },
       });
 
-      if (!data) {
+      if (!newData) {
         throw new Error("Failed to register");
       }
 
-      const selectCategory = data.find(
+      const selectCategory = data?.find(
         (category: CategoryType) => category.id === payload.category
       );
       toast.success(`Successfully registered to ${selectCategory?.title}`, {
