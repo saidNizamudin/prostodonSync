@@ -20,7 +20,6 @@ import {
   CalendarIcon,
   Edit,
   PlusCircle,
-  PlusCircleIcon,
   Trash,
 } from "lucide-react";
 import useSWR, { mutate } from "swr";
@@ -47,9 +46,11 @@ interface ScheduleType extends Schedule {
   };
 }
 
-export default function ScheduleAdmin() {
+export default function ScheduleAdminPage() {
   const [otp, setOTP] = useState("");
-  const [isVerified, setIsVerified] = useState(true);
+  const [isVerified, setIsVerified] = useState(
+    window.sessionStorage.getItem("verified") === "true"
+  );
   const [isWrong, setIsWrong] = useState(false);
 
   const [isCreateMode, setIsCreateMode] = useState(false);
@@ -69,6 +70,7 @@ export default function ScheduleAdmin() {
 
   const handleVerify = () => {
     if (otp === process.env.NEXT_PUBLIC_SECRET_PASSWORD) {
+      window.sessionStorage.setItem("verified", "true");
       setIsVerified(true);
     } else {
       setIsWrong(true);
@@ -100,7 +102,7 @@ export default function ScheduleAdmin() {
     setDate(undefined);
   };
 
-  const handleCreate = () => async () => {
+  const handleCreate = async () => {
     resetCreateMode();
     const toastId = toast.loading("Creating event...");
     try {
@@ -129,7 +131,7 @@ export default function ScheduleAdmin() {
     }
   };
 
-  const handleDelete = (id: string) => async () => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this event?")) {
       return;
     }
@@ -147,7 +149,7 @@ export default function ScheduleAdmin() {
     }
   };
 
-  const handleEdit = () => async () => {
+  const handleEdit = async () => {
     setIsEditMode(false);
     const toastId = toast.loading("Updating event...");
     try {
@@ -416,7 +418,7 @@ export default function ScheduleAdmin() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button size={"lg"} onClick={handleCreate()}>
+            <Button size={"lg"} onClick={handleCreate}>
               Create
             </Button>
           </div>
@@ -510,7 +512,7 @@ export default function ScheduleAdmin() {
                 </PopoverContent>
               </Popover>
             </div>
-            <Button size={"lg"} onClick={handleEdit()}>
+            <Button size={"lg"} onClick={handleEdit}>
               Update
             </Button>
           </div>

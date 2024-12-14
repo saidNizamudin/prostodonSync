@@ -2,7 +2,6 @@
 "use client";
 
 import { Button } from "@/components/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/input-otp";
 import axios from "axios";
 import { useState } from "react";
 import {
@@ -15,31 +14,9 @@ import {
 } from "@/components/table";
 import { useRouter } from "next/navigation";
 import { Schedule } from "@prisma/client";
-import {
-  ArrowRightCircle,
-  CalendarIcon,
-  Edit,
-  PlusCircle,
-  PlusCircleIcon,
-  Trash,
-} from "lucide-react";
-import useSWR, { mutate } from "swr";
-import { Label } from "@/components/label";
-import { Input } from "@/components/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/sheet";
-import { Textarea } from "@/components/textarea";
-import toast from "react-hot-toast";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
-import { Calendar } from "@/components/calendar";
+import { ArrowRightCircle } from "lucide-react";
+import useSWR from "swr";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/badge";
 
 interface ScheduleType extends Schedule {
   _count?: {
@@ -47,11 +24,7 @@ interface ScheduleType extends Schedule {
   };
 }
 
-export default function ScheduleAdmin() {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-
+export default function SchedulePage() {
   const router = useRouter();
 
   const { data, isLoading, mutate } = useSWR<ScheduleType[]>(

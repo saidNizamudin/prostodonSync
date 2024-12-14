@@ -3,11 +3,10 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Edit2Icon, Lamp, Lightbulb, PlusCircle, Trash } from "lucide-react";
+import { Edit2Icon, Lightbulb, PlusCircle, Trash } from "lucide-react";
 import { Button } from "@/components/button";
-import { Category } from "@prisma/client";
 import { Badge } from "@/components/badge";
 import useSWR from "swr";
 import { Label } from "@/components/label";
@@ -21,10 +20,6 @@ import {
 } from "@/components/sheet";
 import { Textarea } from "@/components/textarea";
 import toast from "react-hot-toast";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
-import { Calendar } from "@/components/calendar";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 interface CategoryType {
   id?: string;
@@ -35,7 +30,7 @@ interface CategoryType {
   scheduleId?: string;
 }
 
-export default function ScheduleAdmin() {
+export default function CategoryAdminPage() {
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [newCategory, setNewCategory] = useState<CategoryType>({
     title: "",
@@ -72,7 +67,7 @@ export default function ScheduleAdmin() {
     }
   );
 
-  const handleCreate = () => async () => {
+  const handleCreate = async () => {
     const toastId = toast.loading("Creating category...");
     setNewCategory({
       title: "",
@@ -279,7 +274,7 @@ export default function ScheduleAdmin() {
             </div>
             <Button
               size={"lg"}
-              onClick={handleCreate()}
+              onClick={handleCreate}
               disabled={
                 !newCategory.title ||
                 !newCategory.instructor ||

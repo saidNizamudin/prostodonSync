@@ -3,29 +3,17 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  Edit2Icon,
-  Lamp,
-  Lightbulb,
-  Loader2Icon,
-  LoaderIcon,
-  PlusCircle,
-  RefreshCcw,
-  Trash,
-} from "lucide-react";
+import { Lightbulb, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/button";
-import { Category } from "@prisma/client";
 import { Badge } from "@/components/badge";
 import useSWR from "swr";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { Textarea } from "@/components/textarea";
 import toast from "react-hot-toast";
-import { Calendar } from "@/components/calendar";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
 
 interface CategoryType {
@@ -42,10 +30,7 @@ interface CategoryType {
   }[];
 }
 
-export default function ScheduleAdmin() {
-  const [selectCategory, setSelectCategory] = useState<CategoryType | null>(
-    null
-  );
+export default function CategoryPage() {
   const [formData, setFormData] = useState<{
     [key: string]: { name: string; notes?: string };
   }>({});
@@ -74,43 +59,48 @@ export default function ScheduleAdmin() {
     }
   );
 
-  const handleRegister =
-    (payload: { name: string; notes?: string; category: string }) =>
-    async () => {
-      const toastId = toast.loading("Registering...");
-      setFormData((prev) => ({
-        ...prev,
-        [payload.category]: {
-          name: "",
-          notes: "",
+  const handleRegister = async (payload: {
+    name: string;
+    notes?: string;
+    category: string;
+  }) => {
+    const toastId = toast.loading("Registering...");
+    setFormData((prev) => ({
+      ...prev,
+      [payload.category]: {
+        name: "",
+        notes: "",
+      },
+    }));
+    try {
+      setRegisterIds((prev) => [...prev, payload.category]);
+      const { name, notes, category } = payload;
+      const { data } = await axios.post("/api/register", {
+        categoryId: category,
+        payload: {
+          name,
+          notes,
         },
-      }));
-      try {
-        setRegisterIds((prev) => [...prev, payload.category]);
-        const { name, notes, category } = payload;
-        const { data } = await axios.post("/api/register", {
-          categoryId: category,
-          payload: {
-            name,
-            notes,
-          },
-        });
+      });
 
-        if (!data) {
-          throw new Error("Failed to register");
-        }
-
-        toast.success(`Successfully registered to ${selectCategory?.title}`, {
-          id: toastId,
-        });
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to register", { id: toastId });
-      } finally {
-        setRegisterIds((prev) => prev.filter((id) => id !== payload.category));
-        mutate();
+      if (!data) {
+        throw new Error("Failed to register");
       }
-    };
+
+      const selectCategory = data.find(
+        (category: CategoryType) => category.id === payload.category
+      );
+      toast.success(`Successfully registered to ${selectCategory?.title}`, {
+        id: toastId,
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to register", { id: toastId });
+    } finally {
+      setRegisterIds((prev) => prev.filter((id) => id !== payload.category));
+      mutate();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -308,11 +298,15 @@ export default function ScheduleAdmin() {
                   </div>
                 </div>
                 <Button
-                  onClick={handleRegister({
-                    name: formData[category.id]?.name?.trim() || "",
-                    notes: formData[category.id]?.notes?.trim() || "",
-                    category: category.id,
-                  })}
+                  onClick={() => {
+                    if (!category.id) return;
+
+                    handleRegister({
+                      name: formData[category.id]?.name?.trim() || "",
+                      notes: formData[category.id]?.notes?.trim() || "",
+                      category: category.id,
+                    });
+                  }}
                   className="w-[100px]"
                   variant={"success"}
                   disabled={
