@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { ScheduleStatusEnum } from "@prisma/client";
 
-export const DELETE = async (
-  req: NextRequest,
-  context: { params: { scheduleId: string } }
-) => {
-  const { scheduleId } = context.params;
+export const DELETE = async (req: NextRequest) => {
+  const scheduleId = req.nextUrl.pathname.split("/").pop();
 
   try {
     const schedule = await prisma.schedule.delete({
@@ -25,11 +22,8 @@ export const DELETE = async (
   }
 };
 
-export const PUT = async (
-  req: NextRequest,
-  context: { params: { scheduleId: string } }
-) => {
-  const { scheduleId } = context.params;
+export const PUT = async (req: NextRequest) => {
+  const scheduleId = req.nextUrl.pathname.split("/").pop();
   const { name: title, description: desc, date } = await req.json();
 
   if (!title) {
@@ -71,11 +65,8 @@ export const PUT = async (
   }
 };
 
-export const PATCH = async (
-  req: NextRequest,
-  context: { params: { scheduleId: string } }
-) => {
-  const { scheduleId } = context.params;
+export const PATCH = async (req: NextRequest) => {
+  const scheduleId = req.nextUrl.pathname.split("/").pop();
 
   try {
     const schedule = await prisma.schedule.findUnique({

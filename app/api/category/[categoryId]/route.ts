@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export const DELETE = async (
-  req: NextRequest,
-  context: { params: { categoryId: string } }
-) => {
-  const { categoryId } = context.params;
+export const DELETE = async (req: NextRequest) => {
+  const categoryId = req.nextUrl.pathname.split("/").pop();
 
   if (!categoryId) {
     return NextResponse.json(
@@ -31,11 +28,8 @@ export const DELETE = async (
   }
 };
 
-export const PUT = async (
-  req: NextRequest,
-  context: { params: { categoryId: string } }
-) => {
-  const { categoryId } = context.params;
+export const PUT = async (req: NextRequest) => {
+  const categoryId = req.nextUrl.pathname.split("/").pop();
 
   if (!categoryId) {
     return NextResponse.json(
