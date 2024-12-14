@@ -1,0 +1,60 @@
+// prisma/schema.prisma
+datasource db {
+    provider  = "postgresql"
+    url  	    = env("DATABASE_URL")
+    directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+model Schedule {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  
+  title             String
+  date              DateTime  @default(now()) 
+  desc              String?
+  status            ScheduleStatusEnum @default(ACTIVE)
+
+  categories        Category[]
+}
+
+model Category {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  
+  title             String
+  instructor        String
+  slot              Int
+  desc              String?
+
+  participants      People[]
+
+  schedule          Schedule  @relation(fields: [scheduleId], references: [id])
+  scheduleId        String
+}
+
+model People {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  
+  name              String
+  notes             String?
+
+  category          Category  @relation(fields: [categoryId], references: [id])
+  categoryId        String
+}
+
+enum ScheduleStatusEnum {
+  ACTIVE
+  CANCELLED
+  CLOSED
+}
