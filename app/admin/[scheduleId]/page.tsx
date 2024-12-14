@@ -5,7 +5,15 @@
 import axios from "axios";
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Edit2Icon, Lightbulb, PlusCircle, Trash } from "lucide-react";
+import {
+  Copy,
+  Edit2Icon,
+  Info,
+  Lightbulb,
+  Loader,
+  PlusCircle,
+  Trash,
+} from "lucide-react";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 import useSWR from "swr";
@@ -20,6 +28,14 @@ import {
 } from "@/components/sheet";
 import { Textarea } from "@/components/textarea";
 import toast from "react-hot-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/dialog";
 
 interface CategoryType {
   id?: string;
@@ -43,6 +59,10 @@ export default function CategoryAdminPage() {
   const [selectCategory, setSelectCategory] = useState<CategoryType | null>(
     null
   );
+
+  const [isSummarizeMode, setIsSummarizeMode] = useState(false);
+  const [isLoadingSummarize, setIsLoadingSummarize] = useState(false);
+  const [summarizeResult, setSummarizeResult] = useState<string>("");
 
   const { scheduleId } = useParams();
 
@@ -138,6 +158,30 @@ export default function CategoryAdminPage() {
     }
   };
 
+  const handleSummarize =
+    (scheduleId: string | string[] | undefined) => async () => {
+      if (!scheduleId) return;
+
+      try {
+        setIsLoadingSummarize(true);
+        const schId =
+          typeof scheduleId === "string" ? scheduleId : scheduleId[0];
+        const { data } = await axios.post(`/api/summarize`, {
+          scheduleId: schId,
+        });
+
+        if (data) {
+          setIsSummarizeMode(true);
+          setSummarizeResult(data);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to summarize data");
+      } finally {
+        setIsLoadingSummarize(false);
+      }
+    };
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex justify-center items-center">
@@ -147,23 +191,29 @@ export default function CategoryAdminPage() {
   }
 
   return (
-    <div className="w-full h-full p-5">
-      <Button
-        onClick={() => setIsCreateMode(true)}
-        className="mb-5"
-        variant={"success"}
-      >
-        <PlusCircle size={20} />
-        Add Category
-      </Button>
-      <div className="flex flex-wrap gap-5">
+    <div className="flex flex-col p-5 mx-auto container items-center justify-center gap-5">
+      <div className="flex items-center gap-5 mb-5">
+        <Button onClick={() => setIsCreateMode(true)} variant={"success"}>
+          <PlusCircle size={20} />
+          Add Category
+        </Button>
+        <Button
+          onClick={handleSummarize(scheduleId)}
+          disabled={isLoadingSummarize}
+        >
+          {isLoadingSummarize ? (
+            <Loader size={20} className="animate-spin" />
+          ) : (
+            <Info size={20} />
+          )}
+          Summarize
+        </Button>
+      </div>
+      <div className="flex flex-wrap w-full gap-5 items-center justify-center">
         {data?.map((category) => (
           <div
             key={category.id}
-            className="flex flex-col border border-gray-300 rounded-md p-5 w-[500px] h-[200px] cursor-pointer hover:shadow-lg transition-all duration-200"
-            onClick={() => {
-              console.log(category);
-            }}
+            className="flex flex-col border border-gray-300 rounded-md p-5 w-[500px] h-[200px]"
           >
             <span className="text-xl font-semibold leading-tight">
               {category.title}
@@ -185,7 +235,6 @@ export default function CategoryAdminPage() {
                 <Button
                   size={"icon"}
                   onClick={(e) => {
-                    e.stopPropagation();
                     setIsEditMode(true);
                     setSelectCategory(category);
                   }}
@@ -196,7 +245,6 @@ export default function CategoryAdminPage() {
                   size={"icon"}
                   variant={"destructive"}
                   onClick={(e) => {
-                    e.stopPropagation();
                     handleDelete(category.id);
                   }}
                 >
@@ -371,6 +419,38 @@ export default function CategoryAdminPage() {
           </div>
         </SheetContent>
       </Sheet>
+      <Dialog
+        open={isSummarizeMode}
+        onOpenChange={() => setIsSummarizeMode(false)}
+      >
+        <DialogContent className="min-w-[600px] !w-3/4 max-w-none">
+          <DialogHeader>
+            <DialogTitle>
+              Adjust and Copy to Clipboard the Summarize Data
+            </DialogTitle>
+            <div>
+              <Textarea
+                value={summarizeResult}
+                onChange={(e) => setSummarizeResult(e.target.value)}
+                rows={30}
+                className="border-2 rounded-md p-2 outline-none text-sm"
+                style={{
+                  resize: "none",
+                }}
+              />
+            </div>
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(summarizeResult);
+                toast.success("Copied to clipboard");
+              }}
+            >
+              <Copy size={20} />
+              Copy to Clipboard
+            </Button>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

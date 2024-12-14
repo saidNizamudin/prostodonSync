@@ -5,7 +5,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Lightbulb, TriangleAlert } from "lucide-react";
+import { Lightbulb, StickyNote, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 import useSWR from "swr";
@@ -13,6 +13,12 @@ import toast from "react-hot-toast";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
 import { Alert, AlertDescription, AlertTitle } from "@/components/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/tooltip";
 
 interface CategoryType {
   id?: string;
@@ -24,6 +30,7 @@ interface CategoryType {
   participants?: {
     id: string;
     name: string;
+    notes?: string;
     createdAt: string;
   }[];
 }
@@ -131,7 +138,10 @@ export default function ClosedCategoryPage() {
                         <Lightbulb size={20} />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-max p-5" align="end">
+                    <PopoverContent
+                      className="w-max p-5 max-h-[400px] overflow-y-auto"
+                      align="end"
+                    >
                       {category.participants?.length ? (
                         <div className="flex flex-col gap-2">
                           <span className="text-lg font-semibold">
@@ -145,9 +155,26 @@ export default function ClosedCategoryPage() {
                                   className="flex items-center justify-between gap-5"
                                   key={participant.id}
                                 >
-                                  <span className="text-sm text-nowrap">
-                                    {participant.name}
-                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-sm text-nowrap">
+                                      {participant.name}
+                                    </span>
+                                    {participant.notes && (
+                                      <TooltipProvider delayDuration={0}>
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <StickyNote
+                                              size={14}
+                                              color="grey"
+                                            />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            {participant.notes}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
                                   <span className="text-xs text-nowrap text-black/60">
                                     {format(
                                       new Date(participant.createdAt),
@@ -174,9 +201,26 @@ export default function ClosedCategoryPage() {
                                       className="flex items-center justify-between gap-5"
                                       key={participant.id}
                                     >
-                                      <span className="text-sm text-nowrap">
-                                        {participant.name}
-                                      </span>
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm text-nowrap">
+                                          {participant.name}
+                                        </span>
+                                        {participant.notes && (
+                                          <TooltipProvider delayDuration={0}>
+                                            <Tooltip>
+                                              <TooltipTrigger>
+                                                <StickyNote
+                                                  size={14}
+                                                  color="grey"
+                                                />
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                {participant.notes}
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </div>
                                       <span className="text-xs text-nowrap text-black/60">
                                         {format(
                                           new Date(participant.createdAt),

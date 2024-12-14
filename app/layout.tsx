@@ -30,11 +30,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased w-dvw h-dvh`}
       >
-        <main className="h-[calc(100vh-60px)]">
-          <Toaster />
+        <main className="h-dvh">
+          <Toaster
+            toastOptions={{
+              style: {
+                zIndex: 100,
+              },
+            }}
+          />
           {children}
         </main>
-        <footer className="absolute bottom-0 w-dvw flex justify-center items-center h-[60px] z-[9999] bg-white border-t shadow-lg">
+        <footer className="absolute bottom-0 w-[200px] flex justify-center items-center h-[60px] z-[90] bg-white border-t shadow-lg">
           <span>
             Created by{" "}
             <Link
