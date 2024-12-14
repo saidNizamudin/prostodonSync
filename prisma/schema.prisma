@@ -14,13 +14,13 @@ model Schedule {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
-  
+
   title             String
   date              DateTime  @default(now()) 
   desc              String?
   status            ScheduleStatusEnum @default(ACTIVE)
 
-  categories        Category[]
+  categories        Category[] 
 }
 
 model Category {
@@ -28,7 +28,7 @@ model Category {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
-  
+
   title             String
   instructor        String
   slot              Int
@@ -36,7 +36,7 @@ model Category {
 
   participants      People[]
 
-  schedule          Schedule  @relation(fields: [scheduleId], references: [id])
+  schedule          Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   scheduleId        String
 }
 
@@ -45,11 +45,11 @@ model People {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   deletedAt         DateTime?
-  
+
   name              String
   notes             String?
 
-  category          Category  @relation(fields: [categoryId], references: [id])
+  category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId        String
 }
 

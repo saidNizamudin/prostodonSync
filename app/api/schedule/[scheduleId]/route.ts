@@ -4,6 +4,7 @@ import { ScheduleStatusEnum } from "@prisma/client";
 
 export const DELETE = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
+  console.log(scheduleId);
 
   try {
     const schedule = await prisma.schedule.delete({
