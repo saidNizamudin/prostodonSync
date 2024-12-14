@@ -2,7 +2,6 @@
 "use client";
 
 import { Button } from "@/components/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/input-otp";
 import axios from "axios";
 import { useState } from "react";
 import {
@@ -22,7 +21,7 @@ import {
   PlusCircle,
   Trash,
 } from "lucide-react";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import {
@@ -47,12 +46,6 @@ interface ScheduleType extends Schedule {
 }
 
 export default function ScheduleAdminPage() {
-  const [otp, setOTP] = useState("");
-  const [isVerified, setIsVerified] = useState(
-    window.sessionStorage.getItem("verified") === "true"
-  );
-  const [isWrong, setIsWrong] = useState(false);
-
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -67,15 +60,6 @@ export default function ScheduleAdminPage() {
   >(undefined);
 
   const router = useRouter();
-
-  const handleVerify = () => {
-    if (otp === process.env.NEXT_PUBLIC_SECRET_PASSWORD) {
-      window.sessionStorage.setItem("verified", "true");
-      setIsVerified(true);
-    } else {
-      setIsWrong(true);
-    }
-  };
 
   const { data, isLoading, mutate } = useSWR<ScheduleType[]>(
     "/api/schedule",
@@ -229,44 +213,6 @@ export default function ScheduleAdminPage() {
       mutate();
     }
   };
-
-  if (!isVerified) {
-    return (
-      <div className="w-full h-full flex justify-center items-center">
-        <div className="flex flex-col">
-          <span className="text-base font-semibold mb-1">Password</span>
-          <InputOTP
-            maxLength={6}
-            value={otp}
-            onChange={(value) => {
-              setOTP(value);
-            }}
-          >
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-          <span
-            className={`text-base font-normal mt-2 ${
-              isWrong && "text-destructive"
-            }`}
-          >
-            {isWrong
-              ? "Wrong password, please try again"
-              : "Please enter the password to verify"}
-          </span>
-          <Button size={"lg"} className="mt-4" onClick={handleVerify}>
-            Verify
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
