@@ -4,9 +4,9 @@ import { ScheduleStatusEnum } from "@prisma/client";
 
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { scheduleId: string } }
+  context: { params: { scheduleId: string } }
 ) => {
-  const { scheduleId } = params;
+  const { scheduleId } = context.params;
 
   try {
     const schedule = await prisma.schedule.delete({
@@ -27,9 +27,9 @@ export const DELETE = async (
 
 export const PUT = async (
   req: NextRequest,
-  { params }: { params: { scheduleId: string } }
+  context: { params: { scheduleId: string } }
 ) => {
-  const { scheduleId } = params;
+  const { scheduleId } = context.params;
   const { name: title, description: desc, date } = await req.json();
 
   if (!title) {
@@ -73,9 +73,9 @@ export const PUT = async (
 
 export const PATCH = async (
   req: NextRequest,
-  { params }: { params: { scheduleId: string } }
+  context: { params: { scheduleId: string } }
 ) => {
-  const { scheduleId } = params;
+  const { scheduleId } = context.params;
 
   try {
     const schedule = await prisma.schedule.findUnique({

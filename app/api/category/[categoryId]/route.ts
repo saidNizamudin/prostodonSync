@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { categoryId: string } }
+  context: { params: { categoryId: string } }
 ) => {
-  const { categoryId } = params;
+  const { categoryId } = context.params;
 
   if (!categoryId) {
     return NextResponse.json(
@@ -33,9 +33,9 @@ export const DELETE = async (
 
 export const PUT = async (
   req: NextRequest,
-  { params }: { params: { categoryId: string } }
+  context: { params: { categoryId: string } }
 ) => {
-  const { categoryId } = params;
+  const { categoryId } = context.params;
 
   if (!categoryId) {
     return NextResponse.json(
