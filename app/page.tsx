@@ -28,7 +28,6 @@ interface ScheduleType extends Schedule {
 
 export default function SchedulePage() {
   const isMobile = useMediaQuery({ query: "(max-width: 500px)" });
-  console.log(isMobile);
   const router = useRouter();
 
   const { data, isLoading, mutate } = useSWR<ScheduleType[]>(
@@ -63,24 +62,22 @@ export default function SchedulePage() {
         <span className="text-center text-2xl font-semibold">
           Welcome to ProstodonSync. Choose the schedule you want to access
         </span>
-        <div className="flex border w-full rounded-md overflow-hidden">
-          {data?.map((schedule, index) => (
-            <Link
-              key={schedule.id}
-              href={`/${schedule.id}`}
-              className="cursor-pointer group flex justify-center items-center gap-3 p-5"
-            >
-              <div
-                className={`min-w-4 min-h-4 rounded-full mx-auto ${
-                  schedule.status === "ACTIVE"
-                    ? "bg-success animate-pulse"
-                    : "bg-destructive"
-                }`}
-              />
-              <span>{schedule.title}</span>
-            </Link>
-          ))}
-        </div>
+        {data?.map((schedule, index) => (
+          <Link
+            key={schedule.id}
+            href={`/${schedule.id}`}
+            className="border w-full rounded-md overflow-hidden cursor-pointer group flex justify-start items-center gap-3 p-5"
+          >
+            <div
+              className={`min-w-4 min-h-4 rounded-full ${
+                schedule.status === "ACTIVE"
+                  ? "bg-success animate-pulse"
+                  : "bg-destructive"
+              }`}
+            />
+            <span>{schedule.title}</span>
+          </Link>
+        ))}
       </div>
     );
   }
