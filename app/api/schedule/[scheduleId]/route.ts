@@ -19,7 +19,34 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
-    return NextResponse.json(schedule, { status: 200 });
+    const generateStatus = (
+      status: ScheduleStatusEnum | null,
+      open: Date,
+      closed: Date
+    ): boolean => {
+      const now = new Date();
+      if (status === ScheduleStatusEnum.ACTIVE) {
+        return true;
+      } else if (status === ScheduleStatusEnum.CLOSED) {
+        return false;
+      } else {
+        return now > open && now < closed;
+      }
+    };
+
+    const isActive = generateStatus(
+      schedule.status,
+      schedule.open,
+      schedule.closed
+    );
+
+    return NextResponse.json(
+      {
+        ...schedule,
+        isActive,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Failed to fetch schedule", error);
     return NextResponse.json(
@@ -51,10 +78,13 @@ export const DELETE = async (req: NextRequest) => {
 
 export const PUT = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
-  const { name: title, description: desc, date } = await req.json();
+  const { name: title, description: desc, open, closed } = await req.json();
 
-  if (!title) {
-    return NextResponse.json({ message: "Name is required" }, { status: 400 });
+  if (!title || !open || !closed) {
+    return NextResponse.json(
+      { message: "Name and date are required" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -78,7 +108,8 @@ export const PUT = async (req: NextRequest) => {
       data: {
         title,
         desc,
-        date: date ? new Date(date) : undefined,
+        open: new Date(open),
+        closed: new Date(closed),
       },
     });
 

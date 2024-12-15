@@ -23,7 +23,27 @@ export const GET = async () => {
       return NextResponse.json("No schedules found", { status: 404 });
     }
 
-    return NextResponse.json(schedules, { status: 200 });
+    const generateStatus = (
+      status: ScheduleStatusEnum | null,
+      open: Date,
+      closed: Date
+    ): boolean => {
+      const now = new Date();
+      if (status === ScheduleStatusEnum.ACTIVE) {
+        return true;
+      } else if (status === ScheduleStatusEnum.CLOSED) {
+        return false;
+      } else {
+        return now > open && now < closed;
+      }
+    };
+
+    const response = schedules.map((schedule) => ({
+      ...schedule,
+      isActive: generateStatus(schedule.status, schedule.open, schedule.closed),
+    }));
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch data", error);
     return NextResponse.json(
@@ -34,11 +54,18 @@ export const GET = async () => {
 };
 
 export const POST = async (req: NextRequest) => {
-  const { name: title, description: desc, date } = await req.json();
+  const { name: title, description: desc, open, closed } = await req.json();
 
-  if (!title) {
+  if (!title || !open || !closed) {
     return NextResponse.json(
-      { message: "Name and description are required" },
+      { message: "Name and date are required" },
+      { status: 400 }
+    );
+  }
+
+  if (new Date(open) > new Date(closed)) {
+    return NextResponse.json(
+      { message: "Closed date must be after open date" },
       { status: 400 }
     );
   }
@@ -48,8 +75,8 @@ export const POST = async (req: NextRequest) => {
       data: {
         title,
         desc,
-        status: ScheduleStatusEnum.ACTIVE,
-        date: date ? new Date(date) : undefined,
+        open: new Date(open),
+        closed: new Date(closed),
       },
     });
 

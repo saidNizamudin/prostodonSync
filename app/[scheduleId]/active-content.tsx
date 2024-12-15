@@ -340,7 +340,7 @@ export default function ActiveCategoryPage() {
   }
 
   return (
-    <div className="flex flex-col p-5 mx-auto container items-center justify-center gap-5">
+    <div className="flex flex-col p-5 mx-auto items-center justify-center gap-5">
       <Button
         className="w-[200px]"
         onClick={async () => {
@@ -379,11 +379,13 @@ export default function ActiveCategoryPage() {
 
           return (
             <div key={category.id} className="flex flex-col">
-              {slotLeft <= 0 && (
+              {slotLeft <= 0 ? (
                 <span className="text-xs text-center text-destructive leading-none w-full">
                   * Eventhough its full, you can still register and you will be
                   added to the waiting list.
                 </span>
+              ) : (
+                <span className="text-xs leading-none text-white">.</span>
               )}
               <div className="flex flex-col border border-gray-300 rounded-md p-5 w-[500px] h-[500px]">
                 <span className="text-xl font-semibold leading-tight">

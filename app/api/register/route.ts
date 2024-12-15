@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
+import { ScheduleStatusEnum } from "@prisma/client";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -26,6 +27,8 @@ export const POST = async (req: NextRequest) => {
         schedule: {
           select: {
             status: true,
+            open: true,
+            closed: true,
           },
         },
       },
@@ -38,7 +41,15 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    if (category.schedule.status !== "ACTIVE") {
+    if (category.schedule.status === ScheduleStatusEnum.CLOSED) {
+      return NextResponse.json(
+        { error: "Schedule is closed" },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date();
+    if (now < category.schedule.open || now > category.schedule.closed) {
       return NextResponse.json(
         { error: "Schedule is not active" },
         { status: 400 }

@@ -19,8 +19,10 @@ import useSWR from "swr";
 import { format } from "date-fns";
 import { useMediaQuery } from "react-responsive";
 import Link from "next/link";
+import { Badge } from "@/components/badge";
 
 interface ScheduleType extends Schedule {
+  isActive: boolean;
   _count?: {
     categories: number;
   };
@@ -56,91 +58,43 @@ export default function SchedulePage() {
     );
   }
 
-  if (isMobile) {
-    return (
-      <div className="flex flex-col gap-5 w-full h-full p-10 px-3 container mx-auto">
-        <span className="text-center text-2xl font-semibold">
-          Welcome to ProstodonSync. Choose the schedule you want to access
-        </span>
-        {data?.map((schedule, index) => (
-          <Link
-            key={schedule.id}
-            href={`/${schedule.id}`}
-            className="border w-full rounded-md overflow-hidden cursor-pointer group flex justify-start items-center gap-3 p-5"
-          >
-            <div
-              className={`min-w-4 min-h-4 rounded-full ${
-                schedule.status === "ACTIVE"
-                  ? "bg-success animate-pulse"
-                  : "bg-destructive"
-              }`}
-            />
-            <span>{schedule.title}</span>
-          </Link>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-5 w-full h-full p-10 px-3 container mx-auto">
       <span className="text-center text-2xl font-semibold">
         Welcome to ProstodonSync. Choose the schedule you want to access
       </span>
-      <div className="flex border w-full rounded-md overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="w-[400px]">Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-nowrap">Total Categories</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((schedule, index) => (
-              <TableRow
-                key={schedule.id}
-                className="cursor-pointer group"
-                onClick={() => {
-                  router.push(`/${schedule.id}`);
-                }}
-              >
-                <TableCell>
-                  <div
-                    className={`min-w-4 min-h-4 rounded-full mx-auto ${
-                      schedule.status === "ACTIVE"
-                        ? "bg-success animate-pulse"
-                        : "bg-destructive"
-                    }`}
-                  />
-                </TableCell>
-                <TableCell className="text-nowrap">{schedule.title}</TableCell>
-                <TableCell className="min-w-[500px]">{schedule.desc}</TableCell>
-                <TableCell className="text-nowrap">
-                  {schedule.date
-                    ? format(new Date(schedule.date), "dd MMMM, yyyy")
-                    : "-"}
-                </TableCell>
-                <TableCell className="text-center">
-                  {schedule._count?.categories}
-                </TableCell>
-                <TableCell className="flex items-center justify-center gap-2 px-5">
-                  <Button
-                    className="w-flex items-center"
-                    onClick={() => router.push(`/${schedule.id}`)}
-                  >
-                    Go to schedule
-                    <ArrowRightCircle className="group-hover:translate-x-0.5 transition-all duration-300 ease-in-out" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {data?.map((schedule, index) => (
+        <Link
+          key={schedule.id}
+          href={`/${schedule.id}`}
+          className="border w-full rounded-md overflow-hidden cursor-pointer group flex flex-col justify-start items-start gap-2 p-5 hover:shadow-lg transition-all duration-300"
+        >
+          <div className="flex items-center w-full gap-1">
+            <div
+              className={`w-4 h-4 aspect-square rounded-full ${
+                schedule.isActive
+                  ? "bg-success animate-pulse"
+                  : "bg-destructive"
+              }`}
+            />
+            <span className="text-xl font-semibold max-[500px]:text-base">
+              {schedule.title}
+            </span>
+          </div>
+          <span className="text-gray-500 text-sm line-clamp-3">
+            {schedule.desc}
+          </span>
+          <span className="text-start">
+            {`${format(
+              new Date(schedule.open),
+              "dd MMMM yyyy hh:mm a"
+            )} - ${format(new Date(schedule.closed), "hh:mm a")}`}
+          </span>
+          <Badge variant={"success"}>
+            {schedule._count?.categories} Categories
+          </Badge>
+        </Link>
+      ))}
     </div>
   );
 }

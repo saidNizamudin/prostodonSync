@@ -18,7 +18,10 @@ model Schedule {
   title             String
   date              DateTime  @default(now()) 
   desc              String?
-  status            ScheduleStatusEnum @default(ACTIVE)
+  status            ScheduleStatusEnum?
+
+  open              DateTime  @default(now()) 
+  closed            DateTime  @default(now()) 
 
   categories        Category[] 
 }
@@ -55,6 +58,5 @@ model People {
 
 enum ScheduleStatusEnum {
   ACTIVE
-  CANCELLED
   CLOSED
 }
