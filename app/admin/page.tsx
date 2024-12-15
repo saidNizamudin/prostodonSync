@@ -38,6 +38,7 @@ import { Calendar } from "@/components/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/badge";
+import { useMediaQuery } from "react-responsive";
 
 interface ScheduleType extends Schedule {
   _count?: {
@@ -46,6 +47,7 @@ interface ScheduleType extends Schedule {
 }
 
 export default function ScheduleAdminPage() {
+  const isMobile = useMediaQuery({ query: "(max-width: 500px)" });
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -218,6 +220,229 @@ export default function ScheduleAdminPage() {
     return (
       <div className="w-full h-full flex justify-center items-center">
         Loading...
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col gap-5 w-full h-full p-5">
+        <div className="flex items-center w-max mx-auto">
+          <Button variant={"success"} onClick={() => setIsCreateMode(true)}>
+            <PlusCircle size={16} />
+            Create Event
+          </Button>
+        </div>
+        <div className="flex border w-full rounded-md">
+          {data?.map((schedule, index) => (
+            <div
+              key={schedule.id}
+              className="cursor-pointer flex flex-col items-start gap-3 px-2 py-4 w-full"
+              onClick={() => {
+                router.push(`/admin/${schedule.id}`);
+              }}
+            >
+              <div className="flex items-center gap-3 w-full">
+                <div
+                  className={`aspect-square w-4 h-4 rounded-full ${
+                    schedule.status === "ACTIVE"
+                      ? "bg-success animate-pulse"
+                      : "bg-destructive"
+                  }`}
+                />
+                <span>{schedule.title}</span>
+              </div>
+              <div className="flex justify-end items-center gap-3 w-full">
+                <Button
+                  variant={"destructive"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(schedule.id);
+                  }}
+                >
+                  <Trash size={16} />
+                </Button>
+                <Button
+                  variant={"default"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelecteSchedule(schedule);
+                    setIsEditMode(true);
+                  }}
+                >
+                  <Edit size={16} />
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleStatus(schedule.id);
+                  }}
+                  className="w-[80px]"
+                  disabled={togglingIds.includes(schedule.id)}
+                >
+                  {schedule.status === "ACTIVE" ? "Closed" : "Activate"}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Sheet open={isCreateMode} onOpenChange={() => setIsCreateMode(false)}>
+          <SheetContent className="min-w-[300px]">
+            <SheetHeader>
+              <SheetTitle>Create a Schedule</SheetTitle>
+              <SheetDescription className="text-wrap break-all">
+                This action will create a new schedule
+              </SheetDescription>
+            </SheetHeader>
+            <div className="flex flex-col gap-5 mt-5">
+              <div className="flex flex-col gap-1">
+                <Label className="text-sm font-medium">Event Name</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Input event name"
+                  className="border-2 rounded-md p-2 outline-none text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-sm font-medium">Description</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Input event description"
+                  rows={5}
+                  className="border-2 rounded-md p-2 outline-none text-sm"
+                  style={{
+                    resize: "none",
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="date" className="text-sm font-medium">
+                  Date
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal border-2 rounded-md p-2 outline-none text-sm",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon />
+                      {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button size={"lg"} onClick={handleCreate}>
+                Create
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+        <Sheet open={isEditMode} onOpenChange={() => setIsEditMode(false)}>
+          <SheetContent className="min-w-[300px]">
+            <SheetHeader>
+              <SheetTitle>Update a Schedule</SheetTitle>
+              <SheetDescription className="text-wrap break-all">
+                This action will update the selected schedule
+              </SheetDescription>
+            </SheetHeader>
+            <div className="flex flex-col gap-5 mt-5">
+              <div className="flex flex-col gap-1">
+                <Label className="text-sm font-medium">Event Name</Label>
+                <Input
+                  value={selectedSchedule?.title ?? ""}
+                  onChange={(e) =>
+                    setSelecteSchedule((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            title: e.target.value,
+                          }
+                        : undefined
+                    )
+                  }
+                  placeholder="Input event name"
+                  className="border-2 rounded-md p-2 outline-none text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-sm font-medium">Description</Label>
+                <Textarea
+                  value={selectedSchedule?.desc ?? ""}
+                  onChange={(e) =>
+                    setSelecteSchedule((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            desc: e.target.value,
+                          }
+                        : undefined
+                    )
+                  }
+                  placeholder="Input event description"
+                  rows={5}
+                  className="border-2 rounded-md p-2 outline-none text-sm"
+                  style={{
+                    resize: "none",
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="date" className="text-sm font-medium">
+                  Date
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal border-2 rounded-md p-2 outline-none text-sm",
+                        !selectedSchedule?.date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon />
+                      {selectedSchedule?.date ? (
+                        format(selectedSchedule?.date, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedSchedule?.date ?? undefined}
+                      onSelect={(date) =>
+                        setSelecteSchedule((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                date: date as Date,
+                              }
+                            : undefined
+                        )
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button size={"lg"} onClick={handleEdit}>
+                Update
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }

@@ -256,7 +256,7 @@ export default function CategoryAdminPage() {
         ))}
       </div>
       <Sheet open={isCreateMode} onOpenChange={() => setIsCreateMode(false)}>
-        <SheetContent className="min-w-[600px]">
+        <SheetContent className="min-w-[600px] max-[500px]:min-w-[300px]">
           <SheetHeader>
             <SheetTitle>Create a Category</SheetTitle>
             <SheetDescription className="text-wrap break-all">
@@ -335,7 +335,7 @@ export default function CategoryAdminPage() {
         </SheetContent>
       </Sheet>
       <Sheet open={isEditMode} onOpenChange={() => setIsEditMode(false)}>
-        <SheetContent className="min-w-[600px]">
+        <SheetContent className="min-w-[600px] max-[500px]:min-w-[300px]">
           <SheetHeader>
             <SheetTitle>Update a Category</SheetTitle>
             <SheetDescription className="text-wrap break-all">
@@ -423,7 +423,7 @@ export default function CategoryAdminPage() {
         open={isSummarizeMode}
         onOpenChange={() => setIsSummarizeMode(false)}
       >
-        <DialogContent className="min-w-[600px] !w-3/4 max-w-none">
+        <DialogContent className="min-w-[600px] !w-3/4 max-w-none max-[500px]:min-w-[300px] max-[500px]:pt-10">
           <DialogHeader>
             <DialogTitle>
               Adjust and Copy to Clipboard the Summarize Data

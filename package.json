@@ -37,6 +37,7 @@
     "react-day-picker": "^8.9.1",
     "react-dom": "19.0.0-rc-69d4b800-20241021",
     "react-hot-toast": "^2.4.1",
+    "react-responsive": "^10.0.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7"

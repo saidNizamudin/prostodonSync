@@ -5,12 +5,14 @@ import { ArrowLeftCircle, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/input-otp";
+import { useMediaQuery } from "react-responsive";
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isMobile = useMediaQuery({ query: "(max-width: 500px)" });
   const router = useRouter();
   const [otp, setOTP] = useState("");
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
@@ -39,6 +41,44 @@ export default function Layout({
   }
 
   if (!isVerified) {
+    if (isMobile) {
+      return (
+        <div className="w-full h-full flex justify-center items-center">
+          <div className="flex flex-col">
+            <span className="text-base font-semibold mb-1">Password</span>
+            <InputOTP
+              maxLength={6}
+              value={otp}
+              onChange={(value) => {
+                setOTP(value);
+              }}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} className="!h-12 !w-12" />
+                <InputOTPSlot index={1} className="!h-12 !w-12" />
+                <InputOTPSlot index={2} className="!h-12 !w-12" />
+                <InputOTPSlot index={3} className="!h-12 !w-12" />
+                <InputOTPSlot index={4} className="!h-12 !w-12" />
+                <InputOTPSlot index={5} className="!h-12 !w-12" />
+              </InputOTPGroup>
+            </InputOTP>
+            <span
+              className={`text-base font-normal mt-2 ${
+                isWrong && "text-destructive"
+              }`}
+            >
+              {isWrong
+                ? "Wrong password, please try again"
+                : "Please enter the password to verify"}
+            </span>
+            <Button size={"lg"} className="mt-4" onClick={handleVerify}>
+              Verify
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="w-full h-full flex justify-center items-center">
         <div className="flex flex-col">
@@ -78,7 +118,7 @@ export default function Layout({
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div className="w-full flex justify-start gap-5 items-center px-5 h-20 border-b">
+      <div className="w-full flex justify-start gap-5 items-center px-5 h-20 border-b max-[500px]:flex-col max-[500px]:gap-1 max-[500px]:h-32 max-[500px]:justify-center">
         <Button
           className="flex items-center"
           onClick={() => {

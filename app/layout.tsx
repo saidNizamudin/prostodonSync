@@ -40,7 +40,7 @@ export default function RootLayout({
           />
           {children}
         </main>
-        <footer className="absolute bottom-0 w-[200px] flex justify-center items-center h-[60px] z-[90] bg-white border-t shadow-lg">
+        <footer className="absolute bottom-0 w-[200px] flex justify-center items-center h-[30px] z-[90] bg-white border-t shadow-lg">
           <span>
             Created by{" "}
             <Link
