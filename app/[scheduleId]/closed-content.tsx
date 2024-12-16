@@ -72,6 +72,20 @@ export default function ClosedCategoryPage() {
   if (isMobile) {
     return (
       <div className="flex flex-col p-5 mx-auto container items-center justify-center gap-5">
+        <Alert variant={"destructive"} className="w-full">
+          <div className="flex items-center gap-3">
+            <TriangleAlert size={24} />
+            <div className="flex flex-col w-full">
+              <AlertTitle className="text-lg font-semibold leading-none tracking-tight">
+                This is a closed schedule
+              </AlertTitle>
+              <AlertDescription>
+                You cannot register for any categories at this time. You can
+                still view the categories and participants.
+              </AlertDescription>
+            </div>
+          </div>
+        </Alert>
         <div className="flex flex-col w-full gap-5 items-center justify-center">
           {data?.map((category) => {
             if (
@@ -84,7 +98,7 @@ export default function ClosedCategoryPage() {
               return (
                 <div
                   key={category.id}
-                  className="flex border border-gray-300 rounded-md p-5 w-[300px] h-[200px] justify-center items-center cursor-not-allowed shadow-lg"
+                  className="flex border border-gray-300 rounded-md p-5 w-full h-[200px] justify-center items-center cursor-not-allowed shadow-lg"
                 >
                   <span className="text-xl font-semibold leading-tight">
                     Something went wrong with this category
@@ -96,8 +110,8 @@ export default function ClosedCategoryPage() {
               category.slot - (category.participants?.length || 0);
 
             return (
-              <div key={category.id} className="flex flex-col">
-                <div className="flex flex-col border border-gray-300 rounded-md p-5 w-[300px] h-[200px] shadow-lg">
+              <div key={category.id} className="flex flex-col w-full">
+                <div className="flex flex-col border border-gray-300 rounded-md p-5 w-full h-[200px] shadow-lg">
                   <span className="text-xl font-semibold leading-tight">
                     {category.title}
                   </span>
@@ -208,7 +222,7 @@ export default function ClosedCategoryPage() {
 
   return (
     <div className="flex flex-col p-5 mx-auto container items-center justify-center gap-5">
-      <Alert variant={"destructive"} className="w-max">
+      <Alert variant={"destructive"} className="w-full max-w-max">
         <div className="flex items-center gap-3">
           <TriangleAlert />
           <div className="flex flex-col">

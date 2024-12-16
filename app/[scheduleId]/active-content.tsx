@@ -138,7 +138,7 @@ export default function ActiveCategoryPage() {
           <RefreshCcw size={20} />
           Refresh
         </Button>
-        <div className="flex flex-col w-full gap-5 items-center justify-center">
+        <div className="flex flex-col w-full gap-5 items-center justify-center p-5">
           {data?.map((category) => {
             if (
               !category ||
@@ -150,7 +150,7 @@ export default function ActiveCategoryPage() {
               return (
                 <div
                   key={category.id}
-                  className="flex border border-gray-300 rounded-md p-5 w-[300px] h-[200px] justify-center items-center cursor-not-allowed shadow-lg"
+                  className="flex border border-gray-300 rounded-md w-full h-[200px] justify-center items-center cursor-not-allowed shadow-lg"
                 >
                   <span className="text-xl font-semibold leading-tight">
                     Something went wrong with this category
@@ -162,13 +162,13 @@ export default function ActiveCategoryPage() {
               category.slot - (category.participants?.length || 0);
 
             return (
-              <div key={category.id} className="flex flex-col">
+              <div key={category.id} className="flex flex-col w-full gap-2">
                 {slotLeft <= 0 && (
                   <span className="text-xs text-center text-destructive leading-none w-full">
                     * Eventhough its full, you can still register
                   </span>
                 )}
-                <div className="flex flex-col border border-gray-300 rounded-md p-5 w-[300px] h-[500px] shadow-lg">
+                <div className="flex flex-col border border-gray-300 rounded-md p-5 w-full h-[500px] shadow-lg">
                   <span className="text-xl font-semibold leading-tight">
                     {category.title}
                   </span>
