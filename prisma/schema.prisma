@@ -54,6 +54,18 @@ model People {
 
   category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId        String
+
+  couple            Couple?   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  coupleId          String?
+}
+
+model Couple {
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  
+  members    People[]
 }
 
 enum ScheduleStatusEnum {

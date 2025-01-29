@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -69,6 +70,10 @@ const config: Config = {
       animation: { "caret-blink": "caret-blink 1.25s ease-out infinite" },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/line-clamp")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/line-clamp"),
+    require("daisyui"),
+  ],
 };
 export default config;

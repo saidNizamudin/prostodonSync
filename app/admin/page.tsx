@@ -229,18 +229,21 @@ export default function ScheduleAdminPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full h-full p-5 items-center">
-      <div className="flex items-center w-max mx-auto">
-        <Button variant={"success"} onClick={() => setIsCreateMode(true)}>
-          <PlusCircle size={16} />
-          Create Event
-        </Button>
-      </div>
-      <div className="flex flex-col w-full rounded-md container gap-2">
+    <div className="flex flex-col gap-5 w-full h-full items-center">
+      <Button
+        variant={"success"}
+        onClick={() => setIsCreateMode(true)}
+        className="m-5 mb-0 w-[250px]"
+      >
+        <PlusCircle size={16} />
+        Create Event
+      </Button>
+      <hr className="w-full border border-gray-300" />
+      <div className="flex flex-wrap w-full gap-5 items-center justify-center overflow-auto p-5">
         {data?.map((schedule, index) => (
           <div
             key={schedule.id}
-            className="border-2 rounded-lg cursor-pointer flex flex-col items-start gap-3 px-2 py-4 w-full"
+            className="border border-input rounded-lg cursor-pointer flex flex-col items-start gap-3 px-2 py-4 h-[250px] max-w-[500px] w-full"
             onClick={() => {
               router.push(`/admin/${schedule.id}`);
             }}
@@ -262,7 +265,7 @@ export default function ScheduleAdminPage() {
                 {schedule.desc}
               </span>
             )}
-            <span className="text-start">
+            <span className="text-start mt-auto">
               {`${format(
                 new Date(schedule.open),
                 "dd MMMM yyyy hh:mm a"

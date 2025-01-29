@@ -24,6 +24,7 @@ export const POST = async (req: NextRequest) => {
             slot: true,
             participants: {
               select: {
+                deletedAt: true,
                 name: true,
               },
               orderBy: {
@@ -47,24 +48,35 @@ export const POST = async (req: NextRequest) => {
       let categorySummary = `*${category.title.trim()}*\n`;
       categorySummary += `*INSTRUKTUR:* ${category.instructor.trim()}\n`;
 
-      if (category.participants.length === 0) {
+      const activeParticipants = category.participants.filter(
+        (participant) => !participant.deletedAt
+      );
+
+      if (activeParticipants.length === 0) {
         categorySummary += "Belum ada peserta";
       } else {
         const participatSummary: string[] = [];
-        category.participants
-          .slice(0, category.slot)
-          .forEach((participant, index) => {
-            participatSummary.push(`${index + 1}. ${participant.name.trim()}`);
-          });
+        // get participants that passed the slot and waitlist
+        const participants = activeParticipants.slice(0, category.slot);
+
+        participants.slice(0, category.slot).forEach((participant, index) => {
+          participatSummary.push(`${index + 1}. ${participant.name.trim()}`);
+        });
         categorySummary += participatSummary.join("\n");
+
+        const waitlist = activeParticipants.slice(category.slot);
+        if (waitlist.length > 0) {
+          categorySummary += `\n*-----------WAITLIST-----------*`;
+          waitlist.forEach((participant, index) => {
+            categorySummary += `\n${index + 1}. ${participant.name.trim()}`;
+          });
+        }
       }
 
       resultArr.push(categorySummary);
     });
 
     const response = resultArr.join("\n\n");
-
-    console.log("Summarize", response);
 
     return NextResponse.json(response);
   } catch (error) {

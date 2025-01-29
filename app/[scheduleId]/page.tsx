@@ -14,7 +14,6 @@ export default function CategoryPage() {
   const [isActive, setIsActive] = useState(false);
   const [openTime, setOpenTime] = useState<Date | null>(null);
   const [shouldSchedule, setShouldSchedule] = useState(false);
-  const [moreThan5Minutes, setMoreThan5Minutes] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const { scheduleId } = useParams();
 
@@ -51,12 +50,6 @@ export default function CategoryPage() {
     const now = new Date();
     const timeToOpen = openTime.getTime() - now.getTime();
 
-    if (timeToOpen > 300000) {
-      setTimeLeft(Math.ceil(timeToOpen / 1000));
-      setMoreThan5Minutes(true);
-      return;
-    }
-
     const updateCountdown = () => {
       const now = new Date();
       const timeToOpen = openTime.getTime() - now.getTime();
@@ -87,25 +80,65 @@ export default function CategoryPage() {
 
   if (!isActive) {
     return (
-      <div className="w-full h-full flex flex-col items-center">
-        {shouldSchedule &&
-          timeLeft !== null &&
-          (moreThan5Minutes ? (
-            <div className="text-center mt-5">
-              <p>
-                Opening at {format(openTime as Date, "dd MMMM yyyy HH:mm")} on{" "}
-                that time.
-              </p>
+      <div className="w-full h-full flex flex-col items-center pt-10">
+        {shouldSchedule && timeLeft !== null && (
+          <>
+            <span className="mb-2">
+              Opening on{" "}
+              {openTime ? format(openTime, "dd MMMM, yyyy - hh:mm a") : ""}
+            </span>
+            <div className="grid grid-flow-col gap-5 text-center auto-cols-max">
+              <div className="flex flex-col">
+                <span className="countdown font-mono text-5xl">
+                  <span
+                    style={
+                      {
+                        "--value": Math.floor(timeLeft / 86400),
+                      } as React.CSSProperties
+                    }
+                  />
+                </span>
+                days
+              </div>
+              <div className="flex flex-col">
+                <span className="countdown font-mono text-5xl">
+                  <span
+                    style={
+                      {
+                        "--value": Math.floor((timeLeft % 86400) / 3600),
+                      } as React.CSSProperties
+                    }
+                  />
+                </span>
+                hours
+              </div>
+              <div className="flex flex-col">
+                <span className="countdown font-mono text-5xl">
+                  <span
+                    style={
+                      {
+                        "--value": Math.floor((timeLeft % 3600) / 60),
+                      } as React.CSSProperties
+                    }
+                  />
+                </span>
+                min
+              </div>
+              <div className="flex flex-col">
+                <span className="countdown font-mono text-5xl">
+                  <span
+                    style={
+                      {
+                        "--value": Math.floor(timeLeft % 60),
+                      } as React.CSSProperties
+                    }
+                  />
+                </span>
+                sec
+              </div>
             </div>
-          ) : (
-            <div className="text-center mt-5">
-              {/* Make it as Opening in ... minutes .. seconds */}
-              <p>
-                Opening in {Math.floor(timeLeft / 60)} minutes {timeLeft % 60}{" "}
-                seconds
-              </p>
-            </div>
-          ))}
+          </>
+        )}
         <ClosedCategoryPage />
       </div>
     );

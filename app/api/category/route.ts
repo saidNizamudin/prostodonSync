@@ -23,7 +23,18 @@ export const GET = async (req: NextRequest) => {
             id: true,
             name: true,
             notes: true,
+            couple: {
+              select: {
+                members: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
             createdAt: true,
+            deletedAt: true,
           },
           orderBy: {
             createdAt: "asc",

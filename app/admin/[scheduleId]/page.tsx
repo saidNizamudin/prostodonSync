@@ -44,6 +44,7 @@ import {
   TooltipTrigger,
 } from "@/components/tooltip";
 import { useMediaQuery } from "react-responsive";
+import ParticipantPopover from "@/components/participant-popover";
 
 interface CategoryType {
   id?: string;
@@ -56,7 +57,14 @@ interface CategoryType {
     id: string;
     name: string;
     notes?: string;
+    couple?: {
+      members: {
+        id: string;
+        name: string;
+      }[];
+    };
     createdAt: string;
+    deletedAt?: string;
   }[];
 }
 
@@ -244,7 +252,11 @@ export default function CategoryAdminPage() {
               </div>
             );
           }
-          const slotLeft = category.slot - (category.participants?.length || 0);
+
+          const activeParticipants = category.participants?.filter(
+            (participant) => !participant.deletedAt
+          );
+          const slotLeft = category.slot - (activeParticipants?.length || 0);
 
           return (
             <div
@@ -291,103 +303,11 @@ export default function CategoryAdminPage() {
                   >
                     <Edit2Icon size={20} />
                   </Button>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button size={"icon"}>
-                        <Lightbulb size={20} />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[400px] p-5 max-h-[400px] overflow-y-auto max-[500px]:w-[250px]"
-                      align="end"
-                    >
-                      {category.participants?.length ? (
-                        <div className="flex flex-col gap-2">
-                          <span className="text-lg font-semibold">
-                            Participants
-                          </span>
-                          <div className="flex flex-col gap-2">
-                            {category.participants
-                              .slice(0, category.slot)
-                              .map((participant) => (
-                                <div
-                                  className="flex flex-col items-start"
-                                  key={participant.id}
-                                >
-                                  {isMobile ? (
-                                    <span className="text-sm">
-                                      {participant.name}
-                                    </span>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm text-nowrap">
-                                        {participant.name}
-                                      </span>
-                                      {participant.notes && (
-                                        <TooltipProvider delayDuration={0}>
-                                          <Tooltip>
-                                            <TooltipTrigger>
-                                              <StickyNote
-                                                size={14}
-                                                color="grey"
-                                              />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              {participant.notes}
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
-                                  )}
-                                  <span className="text-xs text-black/60">
-                                    {format(
-                                      new Date(participant.createdAt),
-                                      "dd/MM/yyyy HH:mm:ss"
-                                    )}
-                                  </span>
-                                </div>
-                              ))}
-                            {category.participants.length > category.slot && (
-                              <>
-                                <hr
-                                  className="my-2 h-2 border-black"
-                                  style={{
-                                    marginInline: -20,
-                                  }}
-                                />
-                                <span className="text-xs text-destructive leading-none w-full">
-                                  * more participant(s) on waiting list
-                                </span>
-                                {category.participants
-                                  .slice(category.slot)
-                                  .map((participant) => (
-                                    <div
-                                      className="flex flex-col items-start"
-                                      key={participant.id}
-                                    >
-                                      <span className="text-sm">
-                                        {participant.name}
-                                      </span>
-                                      <span className="text-xs text-black/60">
-                                        {format(
-                                          new Date(participant.createdAt),
-                                          "dd/MM/yyyy HH:mm:ss"
-                                        )}
-                                      </span>
-                                    </div>
-                                  ))}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-lg font-semibold">
-                          No participants yet
-                        </span>
-                      )}
-                    </PopoverContent>
-                  </Popover>
+                  <ParticipantPopover
+                    category={category}
+                    mutate={mutate}
+                    isAdmin
+                  />
                 </div>
               </div>
             </div>

@@ -13,8 +13,8 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const { name, notes } = payload;
-    if (!name) {
+    const { name1, name2, notes } = payload;
+    if (!name1) {
       return NextResponse.json({ error: "Name is missing" }, { status: 400 });
     }
 
@@ -49,42 +49,60 @@ export const POST = async (req: NextRequest) => {
     }
 
     const now = new Date();
-    if (now < category.schedule.open || now > category.schedule.closed) {
+    if (
+      (now < category.schedule.open || now > category.schedule.closed) &&
+      category.schedule.status !== ScheduleStatusEnum.ACTIVE
+    ) {
       return NextResponse.json(
         { error: "Schedule is not active" },
         { status: 400 }
       );
     }
 
-    const data = await prisma.people.create({
+    let couple = null;
+    if (name2) {
+      couple = await prisma.couple.create({
+        data: {},
+      });
+
+      await prisma.people.create({
+        data: {
+          name: name2,
+          notes,
+          category: {
+            connect: {
+              id: category.id,
+            },
+          },
+          couple: {
+            connect: {
+              id: couple.id,
+            },
+          },
+        },
+      });
+    }
+
+    await prisma.people.create({
       data: {
-        name,
+        name: name1,
         notes,
         category: {
           connect: {
             id: category.id,
           },
         },
-      },
-      include: {
-        category: {
-          include: {
-            participants: {
-              select: {
-                id: true,
-                name: true,
-                createdAt: true,
-              },
-              orderBy: {
-                createdAt: "asc",
-              },
+        ...(couple && {
+          couple: {
+            connect: {
+              id: couple.id,
             },
           },
-        },
+        }),
       },
     });
 
-    return NextResponse.json(data.category);
+    return NextResponse.json({ message: "Data created" });
   } catch (error) {
     console.error("Failed to create data", error);
     return NextResponse.json(

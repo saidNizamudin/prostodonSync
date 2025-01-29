@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Poppins } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
 import { Toaster } from "react-hot-toast";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+const poppins = Poppins({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -27,10 +20,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased w-dvw h-dvh`}
-      >
-        <main className="h-dvh">
+      <body className={`${poppins.className} antialiased`}>
+        <main className="h-screen w-screen overflow-auto p-5">
           <Toaster
             toastOptions={{
               style: {
@@ -40,17 +31,6 @@ export default function RootLayout({
           />
           {children}
         </main>
-        <footer className="absolute bottom-0 w-[200px] flex justify-center items-center h-[30px] z-[90] bg-white border-t shadow-lg">
-          <span>
-            Created by{" "}
-            <Link
-              className="underline"
-              href="https://said-nizamudin.netlify.app/"
-            >
-              @Bingbong
-            </Link>
-          </span>
-        </footer>
       </body>
     </html>
   );

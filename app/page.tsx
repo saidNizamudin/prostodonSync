@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { useMediaQuery } from "react-responsive";
 import Link from "next/link";
 import { Badge } from "@/components/badge";
+import ScheduleCard from "@/components/schedule-card";
 
 interface ScheduleType extends Schedule {
   isActive: boolean;
@@ -59,42 +60,28 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full h-full p-10 px-3 container mx-auto">
+    <div className="flex flex-col gap-5 w-full md:px-10 py-5">
       <span className="text-center text-2xl font-semibold">
         Welcome to ProstodonSync. Choose the schedule you want to access
       </span>
-      {data?.map((schedule, index) => (
-        <Link
-          key={schedule.id}
-          href={`/${schedule.id}`}
-          className="border w-full rounded-md overflow-hidden cursor-pointer group flex flex-col justify-start items-start gap-2 p-5 hover:shadow-lg transition-all duration-300"
-        >
-          <div className="flex items-center w-full gap-1">
-            <div
-              className={`w-4 h-4 aspect-square rounded-full ${
-                schedule.isActive
-                  ? "bg-success animate-pulse"
-                  : "bg-destructive"
-              }`}
-            />
-            <span className="text-xl font-semibold max-[500px]:text-base">
-              {schedule.title}
-            </span>
-          </div>
-          <span className="text-gray-500 text-sm line-clamp-3">
-            {schedule.desc}
-          </span>
-          <span className="text-start">
-            {`${format(
-              new Date(schedule.open),
-              "dd MMMM yyyy hh:mm a"
-            )} - ${format(new Date(schedule.closed), "hh:mm a")}`}
-          </span>
-          <Badge variant={"success"}>
-            {schedule._count?.categories} Categories
-          </Badge>
+      <span className="text-center">
+        Created by{" "}
+        <Link className="underline" href="https://said-nizamudin.netlify.app/">
+          @Bingbong
         </Link>
-      ))}
+      </span>
+      <div
+        className="grid gap-5"
+        style={{
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : "repeat(auto-fit, minmax(500px, 1fr))",
+        }}
+      >
+        {data?.map((schedule, index) => (
+          <ScheduleCard key={index} schedule={schedule} />
+        ))}
+      </div>
     </div>
   );
 }
