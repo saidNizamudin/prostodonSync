@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getIsActive } from "@/lib/schedule-status";
 import { ScheduleStatusEnum } from "@prisma/client";
 
 export const GET = async (req: NextRequest) => {
@@ -19,25 +20,10 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
-    const generateStatus = (
-      status: ScheduleStatusEnum | null,
-      open: Date,
-      closed: Date
-    ): boolean => {
-      const now = new Date();
-      if (status === ScheduleStatusEnum.ACTIVE) {
-        return true;
-      } else if (status === ScheduleStatusEnum.CLOSED) {
-        return false;
-      } else {
-        return now > open && now < closed;
-      }
-    };
-
-    const isActive = generateStatus(
+    const isActive = getIsActive(
       schedule.status,
       schedule.open,
-      schedule.closed
+      schedule.closed,
     );
 
     return NextResponse.json(
@@ -140,15 +126,34 @@ export const PATCH = async (req: NextRequest) => {
       );
     }
 
+    const body = await req.json().catch(() => ({}));
+    const action = body?.action as
+      | "ACTIVE"
+      | "CLOSED"
+      | "AUTOMATIC"
+      | undefined;
+
+    let status: ScheduleStatusEnum | null;
+
+    if (action === "AUTOMATIC") {
+      status = null;
+    } else if (action === "ACTIVE") {
+      status = ScheduleStatusEnum.ACTIVE;
+    } else if (action === "CLOSED") {
+      status = ScheduleStatusEnum.CLOSED;
+    } else {
+      status =
+        schedule.status === ScheduleStatusEnum.ACTIVE
+          ? ScheduleStatusEnum.CLOSED
+          : ScheduleStatusEnum.ACTIVE;
+    }
+
     const updatedSchedule = await prisma.schedule.update({
       where: {
         id: schedule.id,
       },
       data: {
-        status:
-          schedule.status === "ACTIVE"
-            ? ScheduleStatusEnum.CLOSED
-            : ScheduleStatusEnum.ACTIVE,
+        status,
       },
     });
 

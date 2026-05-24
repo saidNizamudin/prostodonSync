@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { ScheduleStatusEnum } from "@prisma/client";
+import { getIsActive } from "@/lib/schedule-status";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET request to fetch all events
@@ -23,24 +23,9 @@ export const GET = async () => {
       return NextResponse.json("No schedules found", { status: 404 });
     }
 
-    const generateStatus = (
-      status: ScheduleStatusEnum | null,
-      open: Date,
-      closed: Date
-    ): boolean => {
-      const now = new Date();
-      if (status === ScheduleStatusEnum.ACTIVE) {
-        return true;
-      } else if (status === ScheduleStatusEnum.CLOSED) {
-        return false;
-      } else {
-        return now > open && now < closed;
-      }
-    };
-
     const response = schedules.map((schedule) => ({
       ...schedule,
-      isActive: generateStatus(schedule.status, schedule.open, schedule.closed),
+      isActive: getIsActive(schedule.status, schedule.open, schedule.closed),
     }));
 
     return NextResponse.json(response, { status: 200 });

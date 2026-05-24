@@ -9,42 +9,30 @@ import {
   Copy,
   Edit2Icon,
   Info,
-  Lightbulb,
   Loader,
   PlusCircle,
-  StickyNote,
+  RefreshCcw,
   Trash,
 } from "lucide-react";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
+import { cardGridClass } from "@/components/card";
+import AppCard, { CategorySlotMeta } from "@/components/app-card";
+import AppDashboard, { AppDashboardHeader } from "@/components/app-dashboard";
 import useSWR from "swr";
-import { Label } from "@/components/label";
-import { Input } from "@/components/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/sheet";
+import FormDrawer from "@/components/form-drawer";
+import PanelDialog from "@/components/panel-dialog";
 import { Textarea } from "@/components/textarea";
 import toast from "react-hot-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/dialog";
 import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
+import { Schedule } from "@prisma/client";
+import ParticipantDialog from "@/components/participant-dialog";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/tooltip";
-import { useMediaQuery } from "react-responsive";
-import ParticipantPopover from "@/components/participant-popover";
+  CategoryFormFields,
+  CategoryFormValues,
+} from "@/components/category-form-fields";
+import { CardGridSkeleton, Skeleton } from "@/components/skeleton";
+import { cn } from "@/lib/utils";
 
 interface CategoryType {
   id?: string;
@@ -68,19 +56,27 @@ interface CategoryType {
   }[];
 }
 
+interface ScheduleType extends Schedule {
+  isActive: boolean;
+}
+
+const emptyCategory: CategoryFormValues = {
+  title: "",
+  instructor: "",
+  slot: 0,
+  desc: "",
+};
+
+const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+
 export default function CategoryAdminPage() {
-  const isMobile = useMediaQuery({ query: "(max-width: 500px)" });
   const [isCreateMode, setIsCreateMode] = useState(false);
-  const [newCategory, setNewCategory] = useState<CategoryType>({
-    title: "",
-    instructor: "",
-    slot: 0,
-    desc: "",
-  });
+  const [newCategory, setNewCategory] =
+    useState<CategoryFormValues>(emptyCategory);
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectCategory, setSelectCategory] = useState<CategoryType | null>(
-    null
+    null,
   );
 
   const [isSummarizeMode, setIsSummarizeMode] = useState(false);
@@ -88,51 +84,69 @@ export default function CategoryAdminPage() {
   const [summarizeResult, setSummarizeResult] = useState<string>("");
 
   const { scheduleId } = useParams();
+  const scheduleKey =
+    typeof scheduleId === "string"
+      ? scheduleId
+      : Array.isArray(scheduleId)
+        ? scheduleId[0]
+        : undefined;
 
-  const { data, isLoading, mutate } = useSWR<CategoryType[]>(
-    "/api/category",
-    async (link: string) => {
-      try {
-        const { data } = await axios.get(link, {
-          params: {
-            scheduleId,
-          },
-        });
-        return data;
-      } catch (error) {
-        console.error(error);
-        throw new Error("Failed to fetch data");
-      }
-    },
-    {
-      revalidateOnFocus: false,
-      keepPreviousData: true,
-    }
+  const {
+    data: schedule,
+    isLoading: scheduleLoading,
+    isValidating: scheduleValidating,
+    mutate: mutateSchedule,
+  } = useSWR<ScheduleType>(
+    scheduleKey ? `/api/schedule/${scheduleKey}` : null,
+    fetcher,
+    { revalidateOnFocus: false },
   );
+
+  const {
+    data,
+    isLoading: categoriesLoading,
+    isValidating: categoriesValidating,
+    mutate,
+  } = useSWR<CategoryType[]>(
+    scheduleKey ? `/api/category?scheduleId=${scheduleKey}` : null,
+    () =>
+      axios
+        .get("/api/category", { params: { scheduleId: scheduleKey } })
+        .then((res) => res.data),
+    { revalidateOnFocus: false },
+  );
+
+  const showCategorySkeleton = categoriesLoading && !data;
+  const isRefreshing = scheduleValidating || categoriesValidating;
+
+  const handleRefresh = async () => {
+    const toastId = toast.loading("Refreshing...");
+    try {
+      await Promise.all([mutateSchedule(), mutate()]);
+      toast.success("Data refreshed", { id: toastId });
+    } catch {
+      toast.error("Failed to refresh", { id: toastId });
+    }
+  };
 
   const handleCreate = async () => {
     const toastId = toast.loading("Creating category...");
-    setNewCategory({
-      title: "",
-      instructor: "",
-      slot: 0,
-      desc: "",
-    });
+    const payload = { ...newCategory };
+    setNewCategory(emptyCategory);
     setIsCreateMode(false);
 
     try {
       const newData = await axios.post("/api/category", {
-        scheduleId: scheduleId,
-        payload: newCategory,
+        scheduleId: scheduleKey,
+        payload,
       });
       toast.success("Category has been created", { id: toastId });
-
-      mutate((data) => (data ? [...data, newData.data] : [newData.data]));
+      mutate((current) =>
+        current ? [...current, newData.data] : [newData.data],
+      );
     } catch (error) {
       console.error(error);
       toast.error("Failed to create category", { id: toastId });
-    } finally {
-      mutate();
     }
   };
 
@@ -144,372 +158,306 @@ export default function CategoryAdminPage() {
     try {
       await axios.delete(`/api/category/${id}`);
       toast.success("Category has been deleted", { id: toastId });
-      mutate((data) => data?.filter((category) => category.id !== id));
+      mutate((current) => current?.filter((category) => category.id !== id));
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete category", { id: toastId });
-    } finally {
-      mutate();
     }
   };
 
   const handleEdit = async () => {
     if (!selectCategory?.id) return;
+    const payload = { ...selectCategory };
     setIsEditMode(false);
     setSelectCategory(null);
 
     const toastId = toast.loading("Editing category...");
     try {
-      await axios.put(`/api/category/${selectCategory.id}`, {
-        title: selectCategory.title,
-        instructor: selectCategory.instructor,
-        slot: selectCategory.slot,
-        desc: selectCategory.desc,
+      await axios.put(`/api/category/${payload.id}`, {
+        title: payload.title,
+        instructor: payload.instructor,
+        slot: payload.slot,
+        desc: payload.desc,
       });
 
-      mutate((data) =>
-        data?.map((category) =>
-          category.id === selectCategory.id ? selectCategory : category
-        )
+      mutate((current) =>
+        current?.map((category) =>
+          category.id === payload.id ? payload : category,
+        ),
       );
       toast.success("Category has been edited", { id: toastId });
     } catch (error) {
       console.error(error);
       toast.error("Failed to edit category", { id: toastId });
-    } finally {
-      mutate();
     }
   };
 
-  const handleSummarize =
-    (scheduleId: string | string[] | undefined) => async () => {
-      if (!scheduleId) return;
+  const handleSummarize = async () => {
+    if (!scheduleKey) return;
 
-      try {
-        setIsLoadingSummarize(true);
-        const schId =
-          typeof scheduleId === "string" ? scheduleId : scheduleId[0];
-        const { data } = await axios.post(`/api/summarize`, {
-          scheduleId: schId,
-        });
+    try {
+      setIsLoadingSummarize(true);
+      const { data: summary } = await axios.post(`/api/summarize`, {
+        scheduleId: scheduleKey,
+      });
 
-        if (data) {
-          setIsSummarizeMode(true);
-          setSummarizeResult(data);
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to summarize data");
-      } finally {
-        setIsLoadingSummarize(false);
+      if (summary) {
+        setIsSummarizeMode(true);
+        setSummarizeResult(summary);
       }
-    };
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to summarize data");
+    } finally {
+      setIsLoadingSummarize(false);
+    }
+  };
 
-  if (isLoading) {
-    return (
-      <div className="w-full h-full flex justify-center items-center">
-        Loading...
-      </div>
-    );
-  }
+  const isFormValid = (values: CategoryFormValues) =>
+    Boolean(values.title?.trim() && values.instructor?.trim() && values.slot);
+
+  const scheduleDateMeta = schedule
+    ? `${format(new Date(schedule.open), "dd MMM yyyy, hh:mm a")} – ${format(
+        new Date(schedule.closed),
+        "hh:mm a",
+      )}`
+    : undefined;
 
   return (
-    <div className="flex flex-col p-5 mx-auto container items-center justify-center gap-5">
-      <div className="flex items-center gap-5 mb-5">
-        <Button onClick={() => setIsCreateMode(true)} variant={"success"}>
-          <PlusCircle size={20} />
-          Add Category
-        </Button>
-        <Button
-          onClick={handleSummarize(scheduleId)}
-          disabled={isLoadingSummarize}
-        >
-          {isLoadingSummarize ? (
-            <Loader size={20} className="animate-spin" />
-          ) : (
-            <Info size={20} />
-          )}
-          Summarize
-        </Button>
-      </div>
-      <div className="flex flex-wrap w-full gap-5 items-center justify-center">
-        {data?.map((category) => {
-          if (
-            !category ||
-            !category.id ||
-            !category.title ||
-            !category.instructor ||
-            !category.slot
-          ) {
-            return (
-              <div
-                key={category.id}
-                className="flex border border-gray-300 rounded-md p-5 w-[300px] h-[200px] justify-center items-center cursor-not-allowed shadow-lg"
-              >
-                <span className="text-xl font-semibold leading-tight">
-                  Something went wrong with this category
-                </span>
-              </div>
-            );
+    <AppDashboard
+      header={
+        <AppDashboardHeader
+          backLink={{ href: "/admin", label: "All schedules" }}
+          title={schedule?.title ?? ""}
+          subtitle={schedule?.desc ?? undefined}
+          meta={scheduleDateMeta}
+          badges={
+            schedule ? (
+              <Badge variant={schedule.isActive ? "success" : "destructive"}>
+                {schedule.isActive ? "Active" : "Inactive"}
+              </Badge>
+            ) : undefined
           }
+          actions={
+            <>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setIsCreateMode(true)}
+                disabled={!scheduleKey}
+                className="gap-1.5"
+              >
+                <PlusCircle className="size-4" />
+                Add Category
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleSummarize}
+                disabled={isLoadingSummarize || !scheduleKey}
+                className="gap-1.5"
+              >
+                {isLoadingSummarize ? (
+                  <Loader className="size-4 animate-spin" />
+                ) : (
+                  <Info className="size-4" />
+                )}
+                Summarize
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="gap-1.5 h-10 w-10"
+                aria-label="Refresh data"
+              >
+                <RefreshCcw
+                  className={cn("size-4", isRefreshing && "animate-spin")}
+                />
+              </Button>
+            </>
+          }
+        >
+          {scheduleLoading && !schedule ? (
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-7 w-2/3 max-w-sm" />
+              <Skeleton className="h-4 w-full max-w-md" />
+              <Skeleton className="h-5 w-32 rounded-full" />
+            </div>
+          ) : !schedule ? (
+            <p className="text-sm text-destructive">Schedule not found</p>
+          ) : null}
+        </AppDashboardHeader>
+      }
+    >
+      {showCategorySkeleton ? (
+        <CardGridSkeleton count={3} variant="category" />
+      ) : (
+        <div
+          className={cn(
+            cardGridClass,
+            isRefreshing && data && "pointer-events-none opacity-60",
+          )}
+        >
+          {data?.map((category) => {
+            if (
+              !category ||
+              !category.id ||
+              !category.title ||
+              !category.instructor ||
+              !category.slot
+            ) {
+              return (
+                <AppCard
+                  key={category?.id ?? Math.random()}
+                  error="Something went wrong with this category"
+                />
+              );
+            }
 
-          const activeParticipants = category.participants?.filter(
-            (participant) => !participant.deletedAt
-          );
-          const slotLeft = category.slot - (activeParticipants?.length || 0);
+            const activeParticipants = category.participants?.filter(
+              (participant) => !participant.deletedAt,
+            );
+            const slotLeft = category.slot - (activeParticipants?.length || 0);
+            const isFull = slotLeft <= 0;
+            const isScheduleClosed = schedule && !schedule.isActive;
+            const ribbonLabel = isScheduleClosed
+              ? "Closed"
+              : isFull
+                ? "Full"
+                : "Open";
+            const ribbonVariant = isScheduleClosed
+              ? "closed"
+              : isFull
+                ? "full"
+                : "open";
 
-          return (
-            <div
-              key={category.id}
-              className="flex flex-col border border-gray-300 rounded-md p-5 w-[500px] h-[200px]"
-            >
-              <span className="text-xl font-semibold leading-tight">
-                {category.title}
-              </span>
-              <span className="flex items-center gap-2 text-base font-semibold leading-none">
-                {`INSTRUKTUR: ${category.instructor}`}
-              </span>
-              <span className="text-sm text-black/80 mb-auto overflow-hidden text-ellipsis line-clamp-3">
-                {category.desc}
-              </span>
-              <div className="flex justify-between mt-5 items-center gap-2">
-                <div className="flex flex-col gap-2">
-                  <Badge className="w-max mt-auto">
-                    {category.slot} slots open
-                  </Badge>
-                  <Badge
-                    className="w-max mt-auto"
-                    variant={slotLeft > 0 ? "success" : "destructive"}
-                  >
-                    {slotLeft > 0 ? `${slotLeft} slots left` : "Full"}
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size={"icon"}
-                    variant={"destructive"}
-                    onClick={(e) => {
-                      handleDelete(category.id);
-                    }}
-                  >
-                    <Trash size={20} />
-                  </Button>
-                  <Button
-                    size={"icon"}
-                    onClick={(e) => {
-                      setIsEditMode(true);
-                      setSelectCategory(category);
-                    }}
-                  >
-                    <Edit2Icon size={20} />
-                  </Button>
-                  <ParticipantPopover
-                    category={category}
-                    mutate={mutate}
-                    isAdmin
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <Sheet open={isCreateMode} onOpenChange={() => setIsCreateMode(false)}>
-        <SheetContent className="min-w-[600px] max-[500px]:min-w-[300px]">
-          <SheetHeader>
-            <SheetTitle>Create a Category</SheetTitle>
-            <SheetDescription className="text-wrap break-all">
-              This action will create a new category
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-col gap-5 mt-5">
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Category Name</Label>
-              <Input
-                value={newCategory.title ?? ""}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, title: e.target.value })
+            return (
+              <AppCard
+                key={category.id}
+                ribbonLabel={ribbonLabel}
+                ribbonVariant={ribbonVariant}
+                title={category.title}
+                subtitle={category.instructor}
+                description={category.desc ?? undefined}
+                actions={
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className="min-w-0 flex-1 rounded-none hover:bg-red-100 !text-red-600"
+                      onClick={() => handleDelete(category.id)}
+                    >
+                      <Trash size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className="min-w-0 flex-1 rounded-none"
+                      onClick={() => {
+                        setIsEditMode(true);
+                        setSelectCategory(category);
+                      }}
+                    >
+                      <Edit2Icon size={16} />
+                    </Button>
+                    <ParticipantDialog
+                      category={category}
+                      mutate={mutate}
+                      isAdmin
+                      triggerClassName="min-w-0 flex-1 rounded-none"
+                    />
+                  </>
                 }
-                placeholder="Input category name"
-                className="border-2 rounded-md p-2 outline-none text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Instructor</Label>
-              <Input
-                value={newCategory.instructor ?? ""}
-                onChange={(e) => {
-                  setNewCategory({
-                    ...newCategory,
-                    instructor: e.target.value,
-                  });
-                }}
-                placeholder="Input category instructor"
-                className="border-2 rounded-md p-2 outline-none text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Slot</Label>
-              <Input
-                value={newCategory.slot ?? 0}
-                type="number"
-                min={0}
-                onChange={(e) => {
-                  setNewCategory({
-                    ...newCategory,
-                    slot: parseInt(e.target.value),
-                  });
-                }}
-                placeholder="Input category slot"
-                className="border-2 rounded-md p-2 outline-none text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Description</Label>
-              <Textarea
-                value={newCategory.desc ?? ""}
-                onChange={(e) => {
-                  setNewCategory({ ...newCategory, desc: e.target.value });
-                }}
-                placeholder="Input category description"
-                rows={5}
-                className="border-2 rounded-md p-2 outline-none text-sm"
-                style={{
-                  resize: "none",
-                }}
-              />
-            </div>
-            <Button
-              size={"lg"}
-              onClick={handleCreate}
-              disabled={
-                !newCategory.title ||
-                !newCategory.instructor ||
-                !newCategory.slot
-              }
-            >
-              Create
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={isEditMode} onOpenChange={() => setIsEditMode(false)}>
-        <SheetContent className="min-w-[600px] max-[500px]:min-w-[300px]">
-          <SheetHeader>
-            <SheetTitle>Update a Category</SheetTitle>
-            <SheetDescription className="text-wrap break-all">
-              This action will update the selected category
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-col gap-5 mt-5">
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Category Name</Label>
-              <Input
-                value={selectCategory?.title ?? ""}
-                onChange={(e) =>
-                  setSelectCategory({
-                    ...selectCategory,
-                    title: e.target.value,
-                  })
-                }
-                placeholder="Input category name"
-                className="border-2 rounded-md p-2 outline-none text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Instructor</Label>
-              <Input
-                value={selectCategory?.instructor ?? ""}
-                onChange={(e) => {
-                  setSelectCategory({
-                    ...selectCategory,
-                    instructor: e.target.value,
-                  });
-                }}
-                placeholder="Input category instructor"
-                className="border-2 rounded-md p-2 outline-none text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Slot</Label>
-              <Input
-                value={selectCategory?.slot ?? 0}
-                type="number"
-                min={0}
-                onChange={(e) => {
-                  setSelectCategory({
-                    ...selectCategory,
-                    slot: parseInt(e.target.value),
-                  });
-                }}
-                placeholder="Input category slot"
-                className="border-2 rounded-md p-2 outline-none text-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Description</Label>
-              <Textarea
-                value={selectCategory?.desc ?? ""}
-                onChange={(e) => {
-                  setSelectCategory({
-                    ...selectCategory,
-                    desc: e.target.value,
-                  });
-                }}
-                placeholder="Input category description"
-                rows={5}
-                className="border-2 rounded-md p-2 outline-none text-sm"
-                style={{
-                  resize: "none",
-                }}
-              />
-            </div>
-            <Button
-              size={"lg"}
-              onClick={handleEdit}
-              disabled={
-                !selectCategory?.title ||
-                !selectCategory?.instructor ||
-                !selectCategory?.slot
-              }
-            >
-              Update
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-      <Dialog
-        open={isSummarizeMode}
-        onOpenChange={() => setIsSummarizeMode(false)}
+              >
+                <CategorySlotMeta slotLeft={slotLeft} slot={category.slot} />
+              </AppCard>
+            );
+          })}
+        </div>
+      )}
+
+      {!showCategorySkeleton && data?.length === 0 && (
+        <p className="py-8 text-center text-sm text-gray-500">
+          No categories yet. Add one to get started.
+        </p>
+      )}
+
+      <FormDrawer
+        open={isCreateMode}
+        onOpenChange={setIsCreateMode}
+        title="Create a Category"
+        description={`Add a new category to ${schedule?.title ?? "this schedule"}`}
+        footer={
+          <Button
+            size="xl"
+            className="rounded-sm"
+            onClick={handleCreate}
+            disabled={!isFormValid(newCategory)}
+          >
+            Create
+          </Button>
+        }
       >
-        <DialogContent className="min-w-[600px] !w-3/4 max-w-none max-[500px]:min-w-[300px] max-[500px]:pt-10">
-          <DialogHeader>
-            <DialogTitle>
-              Adjust and Copy to Clipboard the Summarize Data
-            </DialogTitle>
-            <div>
-              <Textarea
-                value={summarizeResult}
-                onChange={(e) => setSummarizeResult(e.target.value)}
-                rows={30}
-                className="border-2 rounded-md p-2 outline-none text-sm"
-                style={{
-                  resize: "none",
-                }}
-              />
-            </div>
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(summarizeResult);
-                toast.success("Copied to clipboard");
-              }}
-            >
-              <Copy size={20} />
-              Copy to Clipboard
-            </Button>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <CategoryFormFields values={newCategory} onChange={setNewCategory} />
+      </FormDrawer>
+
+      <FormDrawer
+        open={isEditMode}
+        onOpenChange={setIsEditMode}
+        title="Update Category"
+        description={`Update details for ${selectCategory?.title ?? "this category"}`}
+        footer={
+          <Button
+            size="xl"
+            className="rounded-sm"
+            onClick={handleEdit}
+            disabled={!selectCategory || !isFormValid(selectCategory)}
+          >
+            Update
+          </Button>
+        }
+      >
+        <CategoryFormFields
+          values={{
+            title: selectCategory?.title,
+            instructor: selectCategory?.instructor,
+            slot: selectCategory?.slot,
+            desc: selectCategory?.desc,
+          }}
+          onChange={(values) =>
+            setSelectCategory((prev) => (prev ? { ...prev, ...values } : prev))
+          }
+        />
+      </FormDrawer>
+
+      <PanelDialog
+        open={isSummarizeMode}
+        onOpenChange={setIsSummarizeMode}
+        title="Summarize & copy"
+        description="Edit and copy the generated summary"
+        footer={
+          <Button
+            size="xl"
+            className="rounded-sm"
+            onClick={() => {
+              navigator.clipboard.writeText(summarizeResult);
+              toast.success("Copied to clipboard");
+            }}
+          >
+            <Copy size={20} />
+            Copy to Clipboard
+          </Button>
+        }
+      >
+        <Textarea
+          value={summarizeResult}
+          onChange={(e) => setSummarizeResult(e.target.value)}
+          rows={20}
+          className="min-h-[200px] resize-none rounded-md border-2 p-2 text-sm sm:min-h-[300px]"
+        />
+      </PanelDialog>
+    </AppDashboard>
   );
 }

@@ -1,15 +1,15 @@
 "use client";
 
-import { Badge } from "./badge";
+import AppCard, { CategorySlotMeta } from "./app-card";
 import axios from "axios";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
+import { Loader } from "lucide-react";
 import { Button } from "@/components/button";
 import { Label } from "@/components/label";
 import { Input } from "@/components/input";
 import { Textarea } from "@/components/textarea";
 import toast from "react-hot-toast";
-import ParticipantPopover from "./participant-popover";
-import { useMediaQuery } from "react-responsive";
+import ParticipantDialog from "./participant-dialog";
 
 interface CategoryType {
   id?: string;
@@ -33,6 +33,8 @@ interface CategoryType {
   }[];
 }
 
+const compactInputClass = "h-8 px-2 py-1 text-xs";
+
 export default function ActiveCategoryCard({
   category,
   mutate,
@@ -40,54 +42,50 @@ export default function ActiveCategoryCard({
   category: CategoryType;
   mutate: () => void;
 }) {
-  const isMobile = useMediaQuery({ query: "(max-width: 550px)" });
-
-  const [formData, setFormData] = useState<{
-    [key: string]: { name1: string; name2?: string; notes?: string };
-  }>({});
-  const [registerIds, setRegisterIds] = useState<string[]>([]);
+  const [name1, setName1] = useState("");
+  const [name2, setName2] = useState("");
+  const [notes, setNotes] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const activeParticipants = category.participants?.filter(
-    (participant) => !participant.deletedAt
+    (participant) => !participant.deletedAt,
   );
   const slotLeft = (category.slot ?? 0) - (activeParticipants?.length || 0);
+  const isFull = slotLeft <= 0;
 
-  const handleRegister = async (payload: {
-    name1: string;
-    name2?: string;
-    notes?: string;
-    category: string;
-  }) => {
+  const handleRegister = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!category.id) return;
+
+    const trimmedName1 = name1.trim();
+    if (!trimmedName1) return;
+
     const toastId = toast.loading("Registering...");
-    setFormData((prev) => ({
-      ...prev,
-      [payload.category]: {
-        name1: "",
-        name2: "",
-        notes: "",
-      },
-    }));
+    setIsRegistering(true);
+
     try {
-      setRegisterIds((prev) => [...prev, payload.category]);
-      const { name1, name2, notes, category: categoryId } = payload;
       await axios.post("/api/register", {
-        categoryId: categoryId,
+        categoryId: category.id,
         payload: {
-          name1,
-          name2,
-          notes,
+          name1: trimmedName1,
+          name2: name2.trim() || undefined,
+          notes: notes.trim() || undefined,
         },
       });
 
-      toast.success(`Successfully registered to ${category.title ?? "this"}!`, {
-        id: toastId,
-      });
+      setName1("");
+      setName2("");
+      setNotes("");
+      toast.success(
+        `Successfully registered to ${category.title ?? "this category"}!`,
+        { id: toastId },
+      );
+      mutate();
     } catch (error) {
       console.error(error);
       toast.error("Failed to register", { id: toastId });
     } finally {
-      setRegisterIds((prev) => prev.filter((id) => id !== payload.category));
-      mutate();
+      setIsRegistering(false);
     }
   };
 
@@ -98,141 +96,104 @@ export default function ActiveCategoryCard({
     !category.instructor ||
     !category.slot
   ) {
-    return (
-      <div
-        key={category.id}
-        className={`flex border border-gray-300 rounded-md p-5 ${
-          isMobile ? "w-full" : "w-[500px]"
-        } h-[200px] justify-center items-center cursor-not-allowed`}
-      >
-        <span className="text-xl font-semibold leading-tight">
-          Something went wrong with this category
-        </span>
-      </div>
-    );
+    return <AppCard error="Something went wrong with this category" />;
   }
+
+  const formId = `register-${category.id}`;
+
   return (
-    <div key={category.id} className={`flex flex-col ${isMobile && "w-full"}`}>
-      {slotLeft <= 0 ? (
-        <span className="text-xs text-center text-destructive leading-none w-full">
-          {isMobile
-            ? "* Eventhough its full, you can still register"
-            : "* Eventhough its full, you can still register and you will be added to the waiting list."}
-        </span>
-      ) : (
-        <span className="text-xs leading-none text-white">.</span>
-      )}
-      <div
-        className={`flex flex-col border border-input rounded-md p-5 ${
-          isMobile ? "w-full" : "w-[500px]"
-        } h-[550px]`}
-      >
-        <span className="text-xl font-semibold leading-tight">
-          {category.title}
-        </span>
-        <span className="flex items-center gap-2 text-base font-semibold leading-none">
-          {`INSTRUKTUR: ${category.instructor}`}
-        </span>
-        <span
-          className={`text-sm text-black/80 mb-auto overflow-hidden text-ellipsis mt-2 ${
-            isMobile ? "line-clamp-2" : "line-clamp-4"
-          }`}
-        >
-          {category.desc}
-        </span>
-        <div className="flex justify-between mt-5 items-end gap-2">
-          <div className="flex flex-col gap-2">
-            <Badge className="w-max mt-auto">{category.slot} slots open</Badge>
-            <Badge
-              className="w-max mt-auto"
-              variant={slotLeft > 0 ? "success" : "destructive"}
-            >
-              {slotLeft > 0 ? `${slotLeft} slots left` : "Full"}
-            </Badge>
-          </div>
-          <div className="flex gap-2">
-            <ParticipantPopover category={category} mutate={mutate} />
-          </div>
-        </div>
-        <hr
-          className="my-5 h-2 border-black"
-          style={{
-            marginInline: -20,
-          }}
-        />
-        <div className="flex items-end gap-2">
-          <div className="w-full space-y-2">
-            <div className="w-full">
-              <Label className="text-nowrap">Name 1</Label>
-              <Input
-                value={formData[category.id]?.name1 || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    [category.id as string]: {
-                      ...formData[category.id as string],
-                      name1: e.target.value,
-                    },
-                  })
-                }
-                placeholder="Your name - Description"
-              />
-            </div>
-            <div className="w-full">
-              <Label className="text-nowrap">Name 2</Label>
-              <Input
-                value={formData[category.id]?.name2 || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    [category.id as string]: {
-                      ...formData[category.id as string],
-                      name2: e.target.value,
-                    },
-                  })
-                }
-                placeholder="Your name - Description"
-              />
-            </div>
-            <div className="w-full">
-              <Label>Notes (Optional)</Label>
-              <Textarea
-                value={formData[category.id]?.notes || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    [category.id as string]: {
-                      ...formData[category.id as string],
-                      notes: e.target.value,
-                    },
-                  })
-                }
-                rows={3}
-                placeholder="Your notes (if any)"
-                style={{ resize: "none" }}
-              />
-            </div>
-          </div>
-          <Button
-            onClick={() => {
-              if (!category.id) return;
-              handleRegister({
-                name1: formData[category.id]?.name1?.trim() || "",
-                name2: formData[category.id]?.name2?.trim() || "",
-                notes: formData[category.id]?.notes?.trim() || "",
-                category: category.id,
-              });
-            }}
-            className="w-[100px]"
-            variant={"success"}
-            disabled={
-              registerIds.includes(category.id) || !formData[category.id]?.name1
-            }
+    <AppCard
+      className="h-full"
+      contentClassName="flex min-h-0 flex-1 flex-col gap-3"
+      ribbonLabel={isFull ? "Full" : "Open"}
+      ribbonVariant={isFull ? "full" : "open"}
+      title={category.title}
+      subtitle={category.instructor}
+      description={category.desc ?? undefined}
+      footer={
+        <div className="flex flex-col gap-2">
+          <form
+            id={formId}
+            onSubmit={handleRegister}
+            className="flex flex-col gap-2"
+            noValidate
           >
-            Register
-          </Button>
+            <div className="flex flex-col gap-1">
+              <Label
+                htmlFor={`${formId}-name1`}
+                className="text-xs text-nowrap"
+              >
+                Name 1
+              </Label>
+              <Input
+                id={`${formId}-name1`}
+                value={name1}
+                onChange={(e) => setName1(e.target.value)}
+                placeholder="Your name - Description"
+                className={compactInputClass}
+                autoComplete="name"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label
+                htmlFor={`${formId}-name2`}
+                className="text-xs text-nowrap"
+              >
+                Name 2
+              </Label>
+              <Input
+                id={`${formId}-name2`}
+                value={name2}
+                onChange={(e) => setName2(e.target.value)}
+                placeholder="Your name - Description"
+                className={compactInputClass}
+                autoComplete="name"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={`${formId}-notes`} className="text-xs">
+                Notes (Optional)
+              </Label>
+              <Textarea
+                id={`${formId}-notes`}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                placeholder="Your notes (if any)"
+                className="min-h-0 resize-none px-2 py-1 text-xs"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              variant="success"
+              disabled={isRegistering || !name1.trim()}
+              className="h-9 w-full gap-2 text-xs"
+            >
+              {isRegistering ? (
+                <>
+                  <Loader className="size-3.5 animate-spin" />
+                  Registering…
+                </>
+              ) : (
+                "Register"
+              )}
+            </Button>
+          </form>
         </div>
-      </div>
-    </div>
+      }
+      actions={
+        <ParticipantDialog
+          category={category}
+          mutate={mutate}
+          triggerClassName="min-w-0 flex-1 rounded-none"
+        />
+      }
+    >
+      <CategorySlotMeta slotLeft={slotLeft} slot={category.slot} />
+    </AppCard>
   );
 }
