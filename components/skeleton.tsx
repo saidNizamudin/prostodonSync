@@ -32,7 +32,7 @@ export function PageHeaderSkeleton({ showBackLink = false }: { showBackLink?: bo
 
 export function ScheduleCardSkeleton() {
   return (
-    <div className={cn(cardBase, "h-full")}>
+    <div className={cardBase}>
       <Skeleton className="h-10 w-full rounded-none" />
       <div className="flex flex-col gap-4 p-3">
         <div className="flex flex-col gap-1">
@@ -56,7 +56,7 @@ export function ScheduleCardSkeleton() {
 
 export function CategoryCardSkeleton() {
   return (
-    <div className={cn(cardBase, "h-full")}>
+    <div className={cardBase}>
       <Skeleton className="h-10 w-full rounded-none" />
       <div className="flex flex-col gap-4 p-3">
         <div className="flex flex-col gap-1">
@@ -77,7 +77,7 @@ export function CategoryCardSkeleton() {
 
 export function ActiveCategoryCardSkeleton() {
   return (
-    <div className={cn(cardBase, "h-full")}>
+    <div className={cardBase}>
       <Skeleton className="h-10 w-full rounded-none" />
       <div className="flex flex-col gap-3 p-3">
         <div className="flex flex-col gap-1">

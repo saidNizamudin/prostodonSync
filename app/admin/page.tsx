@@ -452,27 +452,32 @@ export default function ScheduleAdminPage() {
                 No open date selected
               </span>
             )}
-            <Calendar
-              mode="single"
-              selected={open}
-              onSelect={setOpen}
-              className={formCalendarClassName}
-            />
-            <Input
-              id="open-date"
-              type="time"
-              className={formTimeInputClassName}
-              value={open ? format(open, "HH:mm") : ""}
-              onChange={(e) => {
-                const time = e.target.value;
-                if (!open) return;
-                const [hour, minute] = time.split(":");
-                const newDate = new Date(open);
-                newDate.setHours(Number(hour));
-                newDate.setMinutes(Number(minute));
-                setOpen(newDate);
-              }}
-            />
+            <div className="flex flex-col gap-1 border border-gray-400 rounded-md w-max">
+              <Calendar
+                mode="single"
+                selected={open}
+                onSelect={setOpen}
+                className={formCalendarClassName}
+              />
+              <div className="flex gap-2 p-3 items-center border-t border-gray-400 ">
+                <Label className="text-sm font-medium">Time:</Label>
+                <Input
+                  id="open-date"
+                  type="time"
+                  className={formTimeInputClassName}
+                  value={open ? format(open, "HH:mm") : ""}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    if (!open) return;
+                    const [hour, minute] = time.split(":");
+                    const newDate = new Date(open);
+                    newDate.setHours(Number(hour));
+                    newDate.setMinutes(Number(minute));
+                    setOpen(newDate);
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex flex-col gap-1">
@@ -490,27 +495,32 @@ export default function ScheduleAdminPage() {
                 No closed date selected
               </span>
             )}
-            <Calendar
-              mode="single"
-              selected={closed}
-              onSelect={setClosed}
-              className={formCalendarClassName}
-            />
-            <Input
-              id="closed-date"
-              type="time"
-              className={formTimeInputClassName}
-              value={closed ? format(closed, "HH:mm") : ""}
-              onChange={(e) => {
-                const time = e.target.value;
-                if (!closed) return;
-                const [hour, minute] = time.split(":");
-                const newDate = new Date(closed);
-                newDate.setHours(Number(hour));
-                newDate.setMinutes(Number(minute));
-                setClosed(newDate);
-              }}
-            />
+            <div className="flex flex-col gap-1 border border-gray-400 rounded-md w-max">
+              <Calendar
+                mode="single"
+                selected={closed}
+                onSelect={setClosed}
+                className={formCalendarClassName}
+              />
+              <div className="flex gap-2 p-3 items-center border-t border-gray-400 ">
+                <Label className="text-sm font-medium">Time:</Label>
+                <Input
+                  id="closed-date"
+                  type="time"
+                  className={formTimeInputClassName}
+                  value={closed ? format(closed, "HH:mm") : ""}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    if (!closed) return;
+                    const [hour, minute] = time.split(":");
+                    const newDate = new Date(closed);
+                    newDate.setHours(Number(hour));
+                    newDate.setMinutes(Number(minute));
+                    setClosed(newDate);
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </FormDrawer>

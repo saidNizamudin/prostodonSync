@@ -4,7 +4,7 @@ export const cardBase =
   "relative flex w-full flex-col overflow-hidden rounded-xl border border-gray-300 bg-white shadow-md transition-shadow duration-200";
 
 export const cardGridClass =
-  "grid w-full grid-cols-1 gap-2 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(min(100%,400px),1fr))]";
+  "grid w-full grid-cols-1 items-start gap-2 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(min(100%,400px),1fr))]";
 
 export function Card({
   className,

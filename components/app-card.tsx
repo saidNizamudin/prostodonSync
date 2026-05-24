@@ -68,9 +68,9 @@ export default function AppCard({
   }
 
   return (
-    <Card className={cn("h-full", className)} onClick={onClick}>
+    <Card className={className} onClick={onClick}>
       {ribbonLabel && <Ribbon variant={ribbonVariant}>{ribbonLabel}</Ribbon>}
-      <CardContent className={cn("h-full flex-1", contentClassName)}>
+      <CardContent className={contentClassName}>
         <div className="flex min-w-0 flex-col gap-0 mb-auto">
           {title && (
             <h3 className="text-md font-semibold leading-snug line-clamp-2">
