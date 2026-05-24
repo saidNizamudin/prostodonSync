@@ -587,47 +587,52 @@ export default function ScheduleAdminPage() {
                 No open date selected
               </span>
             )}
-            <Calendar
-              mode="single"
-              selected={selectedSchedule?.open}
-              onSelect={(date) =>
-                setSelecteSchedule((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        open: date as Date,
-                      }
-                    : undefined,
-                )
-              }
-              className={formCalendarClassName}
-            />
-            <Input
-              id="edit-open-date"
-              type="time"
-              className={formTimeInputClassName}
-              value={
-                selectedSchedule?.open
-                  ? format(selectedSchedule.open, "HH:mm")
-                  : ""
-              }
-              onChange={(e) => {
-                const time = e.target.value;
-                if (!selectedSchedule?.open) return;
-                const [hour, minute] = time.split(":");
-                const newDate = new Date(selectedSchedule.open);
-                newDate.setHours(Number(hour));
-                newDate.setMinutes(Number(minute));
-                setSelecteSchedule((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        open: newDate,
-                      }
-                    : undefined,
-                );
-              }}
-            />
+            <div className="flex flex-col gap-1 border border-gray-400 rounded-md w-max">
+              <Calendar
+                mode="single"
+                selected={selectedSchedule?.open}
+                onSelect={(date) =>
+                  setSelecteSchedule((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          open: date as Date,
+                        }
+                      : undefined,
+                  )
+                }
+                className={formCalendarClassName}
+              />
+              <div className="flex gap-2 p-3 items-center border-t border-gray-400 ">
+                <Label className="text-sm font-medium">Time:</Label>
+                <Input
+                  id="edit-open-date"
+                  type="time"
+                  className={formTimeInputClassName}
+                  value={
+                    selectedSchedule?.open
+                      ? format(selectedSchedule.open, "HH:mm")
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    if (!selectedSchedule?.open) return;
+                    const [hour, minute] = time.split(":");
+                    const newDate = new Date(selectedSchedule.open);
+                    newDate.setHours(Number(hour));
+                    newDate.setMinutes(Number(minute));
+                    setSelecteSchedule((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            open: newDate,
+                          }
+                        : undefined,
+                    );
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex flex-col gap-1">
@@ -645,47 +650,52 @@ export default function ScheduleAdminPage() {
                 No closed date selected
               </span>
             )}
-            <Calendar
-              mode="single"
-              selected={selectedSchedule?.closed}
-              onSelect={(date) =>
-                setSelecteSchedule((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        closed: date as Date,
-                      }
-                    : undefined,
-                )
-              }
-              className={formCalendarClassName}
-            />
-            <Input
-              id="edit-closed-date"
-              type="time"
-              className={formTimeInputClassName}
-              value={
-                selectedSchedule?.closed
-                  ? format(selectedSchedule.closed, "HH:mm")
-                  : ""
-              }
-              onChange={(e) => {
-                const time = e.target.value;
-                if (!selectedSchedule?.closed) return;
-                const [hour, minute] = time.split(":");
-                const newDate = new Date(selectedSchedule.closed);
-                newDate.setHours(Number(hour));
-                newDate.setMinutes(Number(minute));
-                setSelecteSchedule((prev) =>
-                  prev
-                    ? {
-                        ...prev,
-                        closed: newDate,
-                      }
-                    : undefined,
-                );
-              }}
-            />
+            <div className="flex flex-col gap-1 border border-gray-400 rounded-md w-max">
+              <Calendar
+                mode="single"
+                selected={selectedSchedule?.closed}
+                onSelect={(date) =>
+                  setSelecteSchedule((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          closed: date as Date,
+                        }
+                      : undefined,
+                  )
+                }
+                className={formCalendarClassName}
+              />
+              <div className="flex gap-2 p-3 items-center border-t border-gray-400 ">
+                <Label className="text-sm font-medium">Time:</Label>
+                <Input
+                  id="edit-closed-date"
+                  type="time"
+                  className={formTimeInputClassName}
+                  value={
+                    selectedSchedule?.closed
+                      ? format(selectedSchedule.closed, "HH:mm")
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    if (!selectedSchedule?.closed) return;
+                    const [hour, minute] = time.split(":");
+                    const newDate = new Date(selectedSchedule.closed);
+                    newDate.setHours(Number(hour));
+                    newDate.setMinutes(Number(minute));
+                    setSelecteSchedule((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            closed: newDate,
+                          }
+                        : undefined,
+                    );
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </FormDrawer>
