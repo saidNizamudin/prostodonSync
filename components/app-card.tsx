@@ -71,7 +71,7 @@ export default function AppCard({
     <Card className={className} onClick={onClick}>
       {ribbonLabel && <Ribbon variant={ribbonVariant}>{ribbonLabel}</Ribbon>}
       <CardContent className={contentClassName}>
-        <div className="flex min-w-0 flex-col gap-0 mb-auto">
+        <div className="flex min-w-0 shrink-0 flex-col gap-0">
           {title && (
             <h3 className="text-md font-semibold leading-snug line-clamp-2">
               {title}
@@ -86,7 +86,7 @@ export default function AppCard({
             </p>
           )}
         </div>
-        {children}
+        {children && <div className="shrink-0">{children}</div>}
         {footer && <CardFooter>{footer}</CardFooter>}
         {actions && (
           <CardActions className={actionsClassName}>{actions}</CardActions>

@@ -103,8 +103,7 @@ export default function ActiveCategoryCard({
 
   return (
     <AppCard
-      className="h-full"
-      contentClassName="flex min-h-0 flex-1 flex-col gap-3"
+      contentClassName="flex flex-col gap-3"
       ribbonLabel={isFull ? "Full" : "Open"}
       ribbonVariant={isFull ? "full" : "open"}
       title={category.title}

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 export const cardBase =
-  "relative flex w-full flex-col overflow-hidden rounded-xl border border-gray-300 bg-white shadow-md transition-shadow duration-200";
+  "relative flex w-full flex-col overflow-clip rounded-xl border border-gray-300 bg-white shadow-md transition-shadow duration-200";
 
 export const cardGridClass =
   "grid w-full grid-cols-1 items-start gap-2 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(min(100%,400px),1fr))]";
@@ -38,7 +38,7 @@ export function CardFooter({
   return (
     <div
       className={cn(
-        "mt-auto border-t border-gray-200 pt-3 text-sm text-gray-600",
+        "mt-auto shrink-0 border-t border-gray-200 pt-3 text-sm text-gray-600",
         className,
       )}
       {...props}
@@ -56,7 +56,7 @@ export function CardActions({
   return (
     <div
       className={cn(
-        "-mx-3 -mb-3 flex flex-wrap border-t border-slate-500",
+        "-mx-3 -mb-3 flex shrink-0 flex-wrap border-t border-slate-500",
         className,
       )}
       onClick={(e) => e.stopPropagation()}
