@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import supabase from "@/lib/supabase";
 import { getIsActive } from "@/lib/schedule-status";
-import { ScheduleStatusEnum } from "@prisma/client";
+import { ScheduleStatusEnum } from "@/lib/types";
 
 export const GET = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
 
   try {
-    const schedule = await prisma.schedule.findUnique({
-      where: {
-        id: scheduleId,
-      },
-    });
+    const { data: schedule, error } = await supabase
+      .from("Schedule")
+      .select("*")
+      .eq("id", scheduleId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
 
     if (!schedule) {
       return NextResponse.json(
         { message: "Schedule not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -31,13 +35,13 @@ export const GET = async (req: NextRequest) => {
         ...schedule,
         isActive,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Failed to fetch schedule", error);
     return NextResponse.json(
       { message: "Failed to fetch schedule" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -46,65 +50,85 @@ export const DELETE = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
 
   try {
-    const schedule = await prisma.schedule.delete({
-      where: {
-        id: scheduleId,
-      },
-    });
+    const { data: schedule, error } = await supabase
+      .from("Schedule")
+      .delete()
+      .eq("id", scheduleId)
+      .select("*")
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json(schedule, { status: 200 });
   } catch (error) {
     console.error("Failed to delete schedule", error);
     return NextResponse.json(
       { message: "Failed to delete schedule" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
 
 export const PUT = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
-  const { name: title, description: desc, open, closed } = await req.json();
+  const {
+    name: title,
+    description: desc,
+    open,
+    closed,
+    type,
+  } = await req.json();
 
   if (!title || !open || !closed) {
     return NextResponse.json(
       { message: "Name and date are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   try {
-    const schedule = await prisma.schedule.findUnique({
-      where: {
-        id: scheduleId,
-      },
-    });
+    const { data: existingSchedule, error: fetchError } = await supabase
+      .from("Schedule")
+      .select("id")
+      .eq("id", scheduleId)
+      .maybeSingle();
 
-    if (!schedule) {
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    if (!existingSchedule) {
       return NextResponse.json(
         { message: "Schedule not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
-    const updatedSchedule = await prisma.schedule.update({
-      where: {
-        id: schedule.id,
-      },
-      data: {
+    const { data: updatedSchedule, error } = await supabase
+      .from("Schedule")
+      .update({
         title,
         desc,
-        open: new Date(open),
-        closed: new Date(closed),
-      },
-    });
+        open: new Date(open).toISOString(),
+        closed: new Date(closed).toISOString(),
+        ...(type ? { type } : {}),
+      })
+      .eq("id", scheduleId)
+      .select("*")
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json(updatedSchedule, { status: 200 });
   } catch (error) {
     console.error("Failed to update schedule", error);
     return NextResponse.json(
       { message: "Failed to update schedule" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -113,16 +137,20 @@ export const PATCH = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
 
   try {
-    const schedule = await prisma.schedule.findUnique({
-      where: {
-        id: scheduleId,
-      },
-    });
+    const { data: schedule, error: fetchError } = await supabase
+      .from("Schedule")
+      .select("*")
+      .eq("id", scheduleId)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw fetchError;
+    }
 
     if (!schedule) {
       return NextResponse.json(
         { message: "Schedule not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -148,21 +176,23 @@ export const PATCH = async (req: NextRequest) => {
           : ScheduleStatusEnum.ACTIVE;
     }
 
-    const updatedSchedule = await prisma.schedule.update({
-      where: {
-        id: schedule.id,
-      },
-      data: {
-        status,
-      },
-    });
+    const { data: updatedSchedule, error } = await supabase
+      .from("Schedule")
+      .update({ status })
+      .eq("id", scheduleId)
+      .select("*")
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json(updatedSchedule, { status: 200 });
   } catch (error) {
     console.error("Failed to update schedule", error);
     return NextResponse.json(
       { message: "Failed to update schedule" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

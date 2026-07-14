@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import supabase from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 export const POST = async (req: NextRequest) => {
@@ -8,58 +8,69 @@ export const POST = async (req: NextRequest) => {
     if (!scheduleId) {
       return NextResponse.json(
         { error: "Schedule ID or payload is missing" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const schedule = await prisma.schedule.findUnique({
-      where: {
-        id: scheduleId,
-      },
-      select: {
-        categories: {
-          select: {
-            title: true,
-            instructor: true,
-            slot: true,
-            participants: {
-              select: {
-                deletedAt: true,
-                name: true,
-              },
-              orderBy: {
-                createdAt: "asc",
-              },
-            },
-          },
-        },
-      },
-    });
+    const { data: schedule, error } = await supabase
+      .from("Schedule")
+      .select(
+        `
+        id,
+        categories:Category (
+          title,
+          instructor,
+          slot,
+          participants:People (
+            deletedAt,
+            name,
+            createdAt
+          )
+        )
+      `,
+      )
+      .eq("id", scheduleId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
 
     if (!schedule) {
       return NextResponse.json(
         { error: "Schedule not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
+    const categories = Array.isArray(schedule.categories)
+      ? schedule.categories
+      : [];
+
     const resultArr: string[] = [];
-    schedule.categories.forEach((category) => {
+
+    categories.forEach((category) => {
       let categorySummary = `*${category.title.trim()}*\n`;
       categorySummary += `*INSTRUKTUR:* ${category.instructor.trim()}\n`;
 
-      const activeParticipants = category.participants.filter(
-        (participant) => !participant.deletedAt
-      );
+      const participants = Array.isArray(category.participants)
+        ? category.participants
+        : [];
+
+      const activeParticipants = participants
+        .filter((participant) => !participant.deletedAt)
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
 
       if (activeParticipants.length === 0) {
         categorySummary += "Belum ada peserta";
       } else {
         const participatSummary: string[] = [];
-        // get participants that passed the slot and waitlist
-        const participants = activeParticipants.slice(0, category.slot);
+        const confirmed = activeParticipants.slice(0, category.slot);
 
-        participants.slice(0, category.slot).forEach((participant, index) => {
+        confirmed.forEach((participant, index) => {
           participatSummary.push(`${index + 1}. ${participant.name.trim()}`);
         });
         categorySummary += participatSummary.join("\n");
@@ -83,7 +94,7 @@ export const POST = async (req: NextRequest) => {
     console.error("Failed to create data", error);
     return NextResponse.json(
       { message: "Failed to create data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

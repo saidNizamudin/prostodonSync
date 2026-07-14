@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FKG Schedule Race
 
-## Getting Started
+Schedule registration app for FKG fields (Prostodonsia and Bedah Mulut).
 
-First, run the development server:
+## Setup
+
+1. Create a [Supabase](https://supabase.com) project.
+2. Copy credentials from **Project Settings → API**:
+   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
+   - anon public key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - service_role key → `SUPABASE_SERVICE_ROLE_KEY`
+3. Fill in `.env` (see `.env` template in repo).
+4. Apply the database schema:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install -g supabase
+supabase login
+supabase link --project-ref <your-project-ref>
+npm run db:push
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Or paste `supabase/migrations/20250101000000_init.sql` into the Supabase SQL Editor.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+5. Install dependencies and run the app:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000).
 
-To learn more about Next.js, take a look at the following resources:
+## Routes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Route | Description |
+|-------|-------------|
+| `/` | Field selector (Prostodonsia / Bedah Mulut) |
+| `/prosthodontist` | Prostodonsia schedule list |
+| `/maksilofasial` | Bedah Mulut schedule list |
+| `/[type]/[scheduleId]` | Public registration |
+| `/admin` | Manage schedules (OTP protected) |
+| `/admin/[scheduleId]` | Manage categories |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` — development server
+- `npm run build` — production build
+- `npm run db:push` — apply Supabase migrations
+- `npm run db:reset` — reset local Supabase DB (requires Supabase CLI)

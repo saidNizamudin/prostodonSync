@@ -14,6 +14,7 @@ interface AppDashboardProps {
   header?: React.ReactNode;
   isHeaderLoading?: boolean;
   headerLoadingShowBackLink?: boolean;
+  filter?: React.ReactNode;
   beforeContent?: React.ReactNode;
   className?: string;
 }
@@ -23,6 +24,7 @@ export default function AppDashboard({
   header,
   isHeaderLoading,
   headerLoadingShowBackLink,
+  filter,
   beforeContent,
   className,
 }: AppDashboardProps) {
@@ -32,6 +34,9 @@ export default function AppDashboard({
         <PageHeaderSkeleton showBackLink={headerLoadingShowBackLink} />
       ) : (
         header
+      )}
+      {filter && (
+        <div className="flex flex-wrap items-center gap-2">{filter}</div>
       )}
       {beforeContent}
       {children}
@@ -86,7 +91,7 @@ export function AppDashboardHeader({
           </Link>
         )}
         {children ?? (
-          <div className="flex flex-col gap-0">
+          <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg font-semibold leading-snug text-gray-900 sm:text-xl">
                 {title}

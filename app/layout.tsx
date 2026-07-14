@@ -11,8 +11,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Koas Helper",
-  description: "Collection of tools for Koas Residency",
+  title: "FKG Schedule Race",
+  description: "Schedule registration for Prostodonsia and Bedah Mulut",
 };
 
 export default function RootLayout({

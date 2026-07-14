@@ -1,6 +1,15 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Ribbon, { type RibbonVariant } from "@/components/ribbon";
-import { Card, CardActions, CardContent, CardFooter } from "@/components/card";
+import {
+  Card,
+  CardActions,
+  CardContent,
+  CardFooter,
+  cardGridClass,
+} from "@/components/card";
+
+export { cardGridClass };
 
 export interface AppCardProps {
   ribbonLabel?: string;
@@ -15,6 +24,7 @@ export interface AppCardProps {
   className?: string;
   contentClassName?: string;
   actionsClassName?: string;
+  href?: string;
   onClick?: () => void;
 }
 
@@ -53,6 +63,7 @@ export default function AppCard({
   className,
   contentClassName,
   actionsClassName,
+  href,
   onClick,
 }: AppCardProps) {
   if (error) {
@@ -67,8 +78,8 @@ export default function AppCard({
     );
   }
 
-  return (
-    <Card className={className} onClick={onClick}>
+  const card = (
+    <Card className={className} onClick={href ? undefined : onClick}>
       {ribbonLabel && <Ribbon variant={ribbonVariant}>{ribbonLabel}</Ribbon>}
       <CardContent className={contentClassName}>
         <div className="flex min-w-0 shrink-0 flex-col gap-0">
@@ -94,4 +105,14 @@ export default function AppCard({
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block w-full min-w-0">
+        {card}
+      </Link>
+    );
+  }
+
+  return card;
 }

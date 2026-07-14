@@ -6,20 +6,31 @@ import {
   formTextareaClassName,
 } from "@/components/form-field-styles";
 import { QuantityInput } from "@/components/quantity-input";
+import { InstructorField } from "@/components/instructor-field";
+import { ScheduleTypeEnum } from "@/lib/types";
 
 export interface CategoryFormValues {
   title?: string;
   instructor?: string;
   slot?: number;
-  desc?: string;
+  desc?: string | null;
 }
 
 interface CategoryFormFieldsProps {
   values: CategoryFormValues;
   onChange: (values: CategoryFormValues) => void;
+  scheduleType?: ScheduleTypeEnum;
+  saveToCatalog?: boolean;
+  onSaveToCatalogChange?: (checked: boolean) => void;
 }
 
-export function CategoryFormFields({ values, onChange }: CategoryFormFieldsProps) {
+export function CategoryFormFields({
+  values,
+  onChange,
+  scheduleType,
+  saveToCatalog,
+  onSaveToCatalogChange,
+}: CategoryFormFieldsProps) {
   return (
     <>
       <div className="flex flex-col gap-1">
@@ -31,15 +42,25 @@ export function CategoryFormFields({ values, onChange }: CategoryFormFieldsProps
           className={formInputClassName}
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <Label className="text-sm font-medium">Instructor</Label>
-        <Input
+      {scheduleType ? (
+        <InstructorField
           value={values.instructor ?? ""}
-          onChange={(e) => onChange({ ...values, instructor: e.target.value })}
-          placeholder="Input instructor name"
-          className={formInputClassName}
+          onChange={(instructor) => onChange({ ...values, instructor })}
+          scheduleType={scheduleType}
+          saveToCatalog={saveToCatalog}
+          onSaveToCatalogChange={onSaveToCatalogChange}
         />
-      </div>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <Label className="text-sm font-medium">Instructor</Label>
+          <Input
+            value={values.instructor ?? ""}
+            onChange={(e) => onChange({ ...values, instructor: e.target.value })}
+            placeholder="Input instructor name"
+            className={formInputClassName}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <Label className="text-sm font-medium">Slots</Label>
         <QuantityInput

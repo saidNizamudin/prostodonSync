@@ -1,4 +1,4 @@
-import { ScheduleStatusEnum } from "@prisma/client";
+import { ScheduleStatusEnum } from "@/lib/types";
 
 export type ScheduleMode = "automatic" | "manual_active" | "manual_closed";
 
@@ -17,24 +17,26 @@ export function getScheduleMode(
 
 export function getIsActive(
   status: ScheduleStatusEnum | null,
-  open: Date,
-  closed: Date,
+  open: Date | string,
+  closed: Date | string,
   now = new Date(),
 ): boolean {
   if (status === ScheduleStatusEnum.ACTIVE) return true;
   if (status === ScheduleStatusEnum.CLOSED) return false;
-  return now > open && now < closed;
+  const openDate = new Date(open);
+  const closedDate = new Date(closed);
+  return now > openDate && now < closedDate;
 }
 
 export function getInactiveReason(
   status: ScheduleStatusEnum | null,
-  open: Date,
-  closed: Date,
+  open: Date | string,
+  closed: Date | string,
   now = new Date(),
 ): ScheduleInactiveReason | null {
   if (getIsActive(status, open, closed, now)) return null;
   if (status === ScheduleStatusEnum.CLOSED) return "manual_closed";
-  if (now < open) return "not_yet_open";
+  if (now < new Date(open)) return "not_yet_open";
   return "registration_ended";
 }
 

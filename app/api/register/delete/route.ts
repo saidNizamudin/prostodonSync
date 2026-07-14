@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
+import supabase from "@/lib/supabase";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -8,42 +8,42 @@ export const POST = async (req: NextRequest) => {
     if (!peopleId || !type) {
       return NextResponse.json(
         { error: "People ID or type is missing" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const people = await prisma.people.findUnique({
-      where: {
-        id: peopleId,
-      },
-      select: {
-        id: true,
-        deletedAt: true,
-      },
-    });
+    const { data: people, error: fetchError } = await supabase
+      .from("People")
+      .select("id, deletedAt")
+      .eq("id", peopleId)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw fetchError;
+    }
 
     if (!people) {
       return NextResponse.json({ error: "People not found" }, { status: 404 });
     }
 
     if (type === "delete") {
-      await prisma.people.update({
-        where: {
-          id: peopleId,
-        },
-        data: {
-          deletedAt: new Date(),
-        },
-      });
+      const { error } = await supabase
+        .from("People")
+        .update({ deletedAt: new Date().toISOString() })
+        .eq("id", peopleId);
+
+      if (error) {
+        throw error;
+      }
     } else if (type === "bring-back") {
-      await prisma.people.update({
-        where: {
-          id: peopleId,
-        },
-        data: {
-          deletedAt: null,
-        },
-      });
+      const { error } = await supabase
+        .from("People")
+        .update({ deletedAt: null })
+        .eq("id", peopleId);
+
+      if (error) {
+        throw error;
+      }
     } else {
       return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     }
@@ -55,7 +55,7 @@ export const POST = async (req: NextRequest) => {
     console.error("Failed to delete or bring-back", error);
     return NextResponse.json(
       { message: "Failed to delete or bring-back" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

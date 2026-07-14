@@ -20,30 +20,9 @@ import { PanelBody, PanelHeader } from "@/components/panel-chrome";
 import { Button } from "./button";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import type { CategoryWithParticipants, Participant } from "@/lib/types";
 
-interface Participant {
-  id: string;
-  name: string;
-  notes?: string;
-  couple?: {
-    members: {
-      id: string;
-      name: string;
-    }[];
-  };
-  createdAt: string;
-  deletedAt?: string;
-}
-
-interface CategoryType {
-  id?: string;
-  title?: string;
-  instructor?: string;
-  slot?: number;
-  desc?: string;
-  scheduleId?: string;
-  participants?: Participant[];
-}
+type CategoryType = CategoryWithParticipants;
 
 type DisplayItem =
   | { type: "solo"; participant: Participant }
