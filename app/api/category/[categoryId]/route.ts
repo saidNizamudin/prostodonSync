@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardDeleteCategory } from "@/lib/hard-delete";
 import supabase from "@/lib/supabase";
 
 export const DELETE = async (req: NextRequest) => {
@@ -12,17 +13,7 @@ export const DELETE = async (req: NextRequest) => {
   }
 
   try {
-    const { data, error } = await supabase
-      .from("Category")
-      .delete()
-      .eq("id", categoryId)
-      .select("*")
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
+    const data = await hardDeleteCategory(categoryId);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Failed to delete data", error);

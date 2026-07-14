@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { hardDeleteSchedule } from "@/lib/hard-delete";
 import supabase from "@/lib/supabase";
 import { getIsActive } from "@/lib/schedule-status";
 import { ScheduleStatusEnum } from "@/lib/types";
@@ -49,18 +50,15 @@ export const GET = async (req: NextRequest) => {
 export const DELETE = async (req: NextRequest) => {
   const scheduleId = req.nextUrl.pathname.split("/").pop();
 
+  if (!scheduleId) {
+    return NextResponse.json(
+      { message: "Schedule ID is missing" },
+      { status: 400 },
+    );
+  }
+
   try {
-    const { data: schedule, error } = await supabase
-      .from("Schedule")
-      .delete()
-      .eq("id", scheduleId)
-      .select("*")
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
+    const schedule = await hardDeleteSchedule(scheduleId);
     return NextResponse.json(schedule, { status: 200 });
   } catch (error) {
     console.error("Failed to delete schedule", error);

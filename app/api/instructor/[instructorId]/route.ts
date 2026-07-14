@@ -1,3 +1,4 @@
+import { hardDeleteInstructor } from "@/lib/hard-delete";
 import supabase from "@/lib/supabase";
 import { isAdminRequest, unauthorizedAdminResponse } from "@/lib/require-admin-request";
 import { parseScheduleTypeParam } from "@/lib/schedule-type";
@@ -23,7 +24,6 @@ export const DELETE = async (req: NextRequest) => {
       .from("Instructor")
       .select("id")
       .eq("id", instructorId)
-      .is("deletedAt", null)
       .maybeSingle();
 
     if (fetchError) {
@@ -37,17 +37,7 @@ export const DELETE = async (req: NextRequest) => {
       );
     }
 
-    const { data, error } = await supabase
-      .from("Instructor")
-      .update({ deletedAt: new Date().toISOString() })
-      .eq("id", instructor.id)
-      .select("*")
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
+    const data = await hardDeleteInstructor(instructor.id);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Failed to delete instructor", error);
