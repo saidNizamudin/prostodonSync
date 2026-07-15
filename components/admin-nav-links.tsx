@@ -10,7 +10,17 @@ import {
 const navLinkClass =
   "text-sm font-medium text-gray-600 transition-colors hover:text-gray-900";
 
-export function AdminNavLinks() {
+type AdminNavLinksProps = {
+  className?: string;
+  linkClassName?: string;
+  onNavigate?: () => void;
+};
+
+export function AdminNavLinks({
+  className,
+  linkClassName = navLinkClass,
+  onNavigate,
+}: AdminNavLinksProps = {}) {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
@@ -28,18 +38,24 @@ export function AdminNavLinks() {
     };
   }, []);
 
-  return isVerified ? (
-    <>
-      <Link href="/admin/schedule" className={navLinkClass}>
-        Manage Schedule
-      </Link>
-      <Link href="/admin/instructor" className={navLinkClass}>
-        Manage Instructor
-      </Link>
-    </>
-  ) : (
-    <Link href="/admin" className={navLinkClass}>
-      Admin
-    </Link>
+  const linkProps = onNavigate ? { onClick: onNavigate } : undefined;
+
+  return (
+    <div className={className}>
+      {isVerified ? (
+        <>
+          <Link href="/admin/schedule" className={linkClassName} {...linkProps}>
+            Manage Schedule
+          </Link>
+          <Link href="/admin/instructor" className={linkClassName} {...linkProps}>
+            Manage Instructor
+          </Link>
+        </>
+      ) : (
+        <Link href="/admin" className={linkClassName} {...linkProps}>
+          Admin
+        </Link>
+      )}
+    </div>
   );
 }

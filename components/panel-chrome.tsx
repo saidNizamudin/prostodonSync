@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { DialogDescription, DialogTitle } from "@/components/dialog";
 
 interface PanelHeaderProps {
   title: React.ReactNode;
@@ -23,12 +24,14 @@ export function PanelHeader({
       )}
     >
       <div className="min-w-0 flex-1">
-        <h2 className="text-lg font-semibold leading-snug text-gray-900">
+        <DialogTitle className="text-lg font-semibold leading-snug tracking-normal text-gray-900">
           {title}
-        </h2>
-        {description && (
-          <p className="mt-0.5 text-sm text-gray-500">{description}</p>
-        )}
+        </DialogTitle>
+        {description ? (
+          <DialogDescription className="mt-0.5 text-sm text-gray-500">
+            {description}
+          </DialogDescription>
+        ) : null}
       </div>
       {closeButton && (
         <div className="flex shrink-0 items-center">{closeButton}</div>
