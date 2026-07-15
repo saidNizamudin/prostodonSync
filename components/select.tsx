@@ -18,6 +18,7 @@ interface SelectProps {
   options: SelectOption[];
   placeholder?: string;
   disabled?: boolean;
+  readOnly?: boolean;
   className?: string;
   id?: string;
   "aria-label"?: string;
@@ -29,15 +30,23 @@ export function Select({
   options,
   placeholder = "Select an option",
   disabled,
+  readOnly,
   className,
   id,
   "aria-label": ariaLabel,
 }: SelectProps) {
   const [open, setOpen] = React.useState(false);
   const selected = options.find((option) => option.value === value);
+  const isLocked = disabled || readOnly;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={isLocked ? false : open}
+      onOpenChange={(next) => {
+        if (isLocked) return;
+        setOpen(next);
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -45,12 +54,14 @@ export function Select({
           role="combobox"
           aria-expanded={open}
           aria-label={ariaLabel}
+          aria-readonly={readOnly || undefined}
           disabled={disabled}
           className={cn(
             "flex h-11 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm transition-colors",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "data-[state=open]:ring-1 data-[state=open]:ring-ring",
+            readOnly && "cursor-default bg-muted/40",
             className,
           )}
         >
@@ -62,12 +73,14 @@ export function Select({
           >
             {selected ? selected.label : placeholder}
           </span>
-          <ChevronDown
-            className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
-              open && "rotate-180",
-            )}
-          />
+          {!readOnly && (
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                open && "rotate-180",
+              )}
+            />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent

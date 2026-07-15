@@ -461,6 +461,7 @@ export default function AdminScheduleTypePage() {
             }
             placeholder="Select field"
             options={scheduleTypeOptions}
+            readOnly
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -540,6 +541,7 @@ export default function AdminScheduleTypePage() {
             }
             placeholder="Select field"
             options={scheduleTypeOptions}
+            readOnly
           />
         </div>
         <div className="flex flex-col gap-1.5">

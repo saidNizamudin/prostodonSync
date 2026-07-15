@@ -12,7 +12,7 @@ interface QuantityInputProps {
 }
 
 const stepperButtonClassName =
-  "flex h-full w-11 shrink-0 items-center justify-center border-input bg-muted/40 text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40";
+  "flex h-full w-11 shrink-0 items-center justify-center border-input bg-gray-200 text-muted-foreground transition-colors hover:bg-gray-300 disabled:pointer-events-none disabled:opacity-40";
 
 export function QuantityInput({
   value,
