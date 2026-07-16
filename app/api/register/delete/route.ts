@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import { hardDeletePerson } from "@/lib/hard-delete";
 import supabase from "@/lib/supabase";
 
 export const POST = async (req: NextRequest) => {
@@ -10,6 +11,16 @@ export const POST = async (req: NextRequest) => {
         { error: "People ID or type is missing" },
         { status: 400 },
       );
+    }
+
+    if (type === "hard-delete") {
+      const person = await hardDeletePerson(peopleId);
+
+      if (!person) {
+        return NextResponse.json({ error: "People not found" }, { status: 404 });
+      }
+
+      return NextResponse.json({ message: "Permanently deleted" });
     }
 
     const { data: people, error: fetchError } = await supabase

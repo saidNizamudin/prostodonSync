@@ -1,5 +1,54 @@
 import supabase from "@/lib/supabase";
 
+export async function hardDeletePerson(peopleId: string) {
+  const { data: person, error: fetchError } = await supabase
+    .from("People")
+    .select("id, coupleId")
+    .eq("id", peopleId)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw fetchError;
+  }
+
+  if (!person) {
+    return null;
+  }
+
+  const coupleId =
+    typeof person.coupleId === "string" && person.coupleId.length > 0
+      ? person.coupleId
+      : null;
+
+  if (coupleId) {
+    // Clear partners first — Couple FK is ON DELETE CASCADE on People.coupleId
+    const { error: unlinkError } = await supabase
+      .from("People")
+      .update({ coupleId: null })
+      .eq("coupleId", coupleId)
+      .neq("id", peopleId);
+
+    if (unlinkError) {
+      throw unlinkError;
+    }
+  }
+
+  const { error: deletePersonError } = await supabase
+    .from("People")
+    .delete()
+    .eq("id", peopleId);
+
+  if (deletePersonError) {
+    throw deletePersonError;
+  }
+
+  if (coupleId) {
+    await hardDeleteCouplesByIds([coupleId]);
+  }
+
+  return person;
+}
+
 async function hardDeleteCouplesByIds(coupleIds: string[]) {
   const uniqueIds = [...new Set(coupleIds.filter(Boolean))];
   if (uniqueIds.length === 0) {

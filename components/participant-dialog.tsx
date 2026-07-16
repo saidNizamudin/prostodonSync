@@ -17,10 +17,17 @@ import {
   DialogTrigger,
 } from "@/components/dialog";
 import { PanelBody, PanelHeader } from "@/components/panel-chrome";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/popover";
 import { Button } from "./button";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import type { CategoryWithParticipants, Participant } from "@/lib/types";
+
+type DeleteMode = "soft" | "hard";
 
 type CategoryType = CategoryWithParticipants;
 
@@ -100,6 +107,69 @@ function ParticipantNotes({
   );
 }
 
+function DeleteMenu({
+  name,
+  hardOnly = false,
+  onDelete,
+}: {
+  name: string;
+  hardOnly?: boolean;
+  onDelete: (mode: DeleteMode) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Delete ${name}`}
+          className="rounded p-0.5 text-red-500 transition-colors hover:bg-red-50"
+        >
+          <Trash2 size={16} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        side="bottom"
+        sideOffset={4}
+        className="w-48 p-1"
+      >
+        <div className="flex flex-col">
+          {!hardOnly && (
+            <button
+              type="button"
+              className="rounded px-2.5 py-1.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+              onClick={() => {
+                setOpen(false);
+                onDelete("soft");
+              }}
+            >
+              Soft delete
+            </button>
+          )}
+          <button
+            type="button"
+            className="rounded px-2.5 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+            onClick={() => {
+              setOpen(false);
+              if (
+                confirm(
+                  `Permanently delete ${name}? This cannot be undone.`,
+                )
+              ) {
+                onDelete("hard");
+              }
+            }}
+          >
+            Permanently delete
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function ParticipantItem({
   participant,
   isAdmin,
@@ -111,7 +181,7 @@ function ParticipantItem({
   participant: Participant;
   isAdmin: boolean;
   deletingIds: string[];
-  onDelete: (peopleId: string, name: string) => void;
+  onDelete: (peopleId: string, name: string, mode: DeleteMode) => void;
   onBringBack: (peopleId: string, name: string) => void;
   isDeleted?: boolean;
 }) {
@@ -136,27 +206,34 @@ function ParticipantItem({
       </div>
 
       {isAdmin && (
-        <div className="flex shrink-0 items-center">
+        <div className="flex shrink-0 items-center gap-0.5">
           {isDeleting ? (
             <Loader size={14} className="animate-spin text-slate-400" />
           ) : isDeleted ? (
-            <button
-              type="button"
-              aria-label={`Bring back ${participant.name}`}
-              className="rounded p-0.5 text-emerald-600 transition-colors hover:bg-emerald-50"
-              onClick={() => onBringBack(participant.id, participant.name)}
-            >
-              <Check size={16} />
-            </button>
+            <>
+              <button
+                type="button"
+                aria-label={`Bring back ${participant.name}`}
+                className="rounded p-0.5 text-emerald-600 transition-colors hover:bg-emerald-50"
+                onClick={() => onBringBack(participant.id, participant.name)}
+              >
+                <Check size={16} />
+              </button>
+              <DeleteMenu
+                name={participant.name}
+                hardOnly
+                onDelete={(mode) =>
+                  onDelete(participant.id, participant.name, mode)
+                }
+              />
+            </>
           ) : (
-            <button
-              type="button"
-              aria-label={`Delete ${participant.name}`}
-              className="rounded p-0.5 text-red-500 transition-colors hover:bg-red-50"
-              onClick={() => onDelete(participant.id, participant.name)}
-            >
-              <Trash2 size={16} />
-            </button>
+            <DeleteMenu
+              name={participant.name}
+              onDelete={(mode) =>
+                onDelete(participant.id, participant.name, mode)
+              }
+            />
           )}
         </div>
       )}
@@ -175,7 +252,7 @@ function CoupleGroup({
   participants: Participant[];
   isAdmin: boolean;
   deletingIds: string[];
-  onDelete: (peopleId: string, name: string) => void;
+  onDelete: (peopleId: string, name: string, mode: DeleteMode) => void;
   onBringBack: (peopleId: string, name: string) => void;
   isDeleted?: boolean;
 }) {
@@ -228,7 +305,7 @@ function ParticipantList({
   participants: Participant[];
   isAdmin: boolean;
   deletingIds: string[];
-  onDelete: (peopleId: string, name: string) => void;
+  onDelete: (peopleId: string, name: string, mode: DeleteMode) => void;
   onBringBack: (peopleId: string, name: string) => void;
   isDeleted?: boolean;
 }) {
@@ -297,21 +374,36 @@ export default function ParticipantDialog({
     (participant) => !!participant.deletedAt,
   );
 
-  const handleDelete = async (peopleId: string, name: string) => {
-    const toastId = toast.loading(`Deleting ${name}`);
+  const handleDelete = async (
+    peopleId: string,
+    name: string,
+    mode: DeleteMode = "soft",
+  ) => {
+    const isHard = mode === "hard";
+    const toastId = toast.loading(
+      isHard ? `Permanently deleting ${name}` : `Deleting ${name}`,
+    );
     try {
       setDeletingIds((prev) => [...prev, peopleId]);
       await axios.post("/api/register/delete", {
         peopleId,
-        type: "delete",
+        type: isHard ? "hard-delete" : "delete",
       });
 
-      toast.success(`Successfully deleted ${name}`, {
-        id: toastId,
-      });
+      toast.success(
+        isHard
+          ? `Permanently deleted ${name}`
+          : `Successfully deleted ${name}`,
+        { id: toastId },
+      );
     } catch (error) {
       console.error(error);
-      toast.error(`Failed to delete ${name}`, { id: toastId });
+      toast.error(
+        isHard
+          ? `Failed to permanently delete ${name}`
+          : `Failed to delete ${name}`,
+        { id: toastId },
+      );
     } finally {
       setDeletingIds((prev) => prev.filter((id) => id !== peopleId));
       mutate();
