@@ -303,7 +303,7 @@ function CategoryRegistrationCard({
               <Button
                 type="submit"
                 variant="success"
-                disabled={isRegistering || !name1.trim() || isFull}
+                disabled={isRegistering || !name1.trim()}
                 className="h-9 w-full gap-2 text-xs"
               >
                 {isRegistering ? (
