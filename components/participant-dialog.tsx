@@ -17,17 +17,11 @@ import {
   DialogTrigger,
 } from "@/components/dialog";
 import { PanelBody, PanelHeader } from "@/components/panel-chrome";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/popover";
+import { Skeleton } from "@/components/skeleton";
 import { Button } from "./button";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import type { CategoryWithParticipants, Participant } from "@/lib/types";
-
-type DeleteMode = "soft" | "hard";
 
 type CategoryType = CategoryWithParticipants;
 
@@ -71,12 +65,19 @@ function groupParticipantsForDisplay(
   return items;
 }
 
-function SectionDivider({ label }: { label: string }) {
+function SectionDivider({
+  label,
+  action,
+}: {
+  label: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="-mx-1 border-t border-slate-200 px-1 pt-2">
+    <div className="-mx-1 flex items-center justify-between gap-2 border-t border-slate-200 px-1 pt-2">
       <p className="text-[11px] font-medium leading-none text-destructive">
         {label}
       </p>
+      {action}
     </div>
   );
 }
@@ -107,88 +108,27 @@ function ParticipantNotes({
   );
 }
 
-function DeleteMenu({
-  name,
-  hardOnly = false,
-  onDelete,
-}: {
-  name: string;
-  hardOnly?: boolean;
-  onDelete: (mode: DeleteMode) => void;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Delete ${name}`}
-          className="rounded p-0.5 text-red-500 transition-colors hover:bg-red-50"
-        >
-          <Trash2 size={16} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        side="bottom"
-        sideOffset={4}
-        className="w-48 p-1"
-      >
-        <div className="flex flex-col">
-          {!hardOnly && (
-            <button
-              type="button"
-              className="rounded px-2.5 py-1.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
-              onClick={() => {
-                setOpen(false);
-                onDelete("soft");
-              }}
-            >
-              Soft delete
-            </button>
-          )}
-          <button
-            type="button"
-            className="rounded px-2.5 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
-            onClick={() => {
-              setOpen(false);
-              if (
-                confirm(
-                  `Permanently delete ${name}? This cannot be undone.`,
-                )
-              ) {
-                onDelete("hard");
-              }
-            }}
-          >
-            Permanently delete
-          </button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function ParticipantItem({
   participant,
   isAdmin,
   deletingIds,
-  onDelete,
+  onSoftDelete,
+  onHardDelete,
   onBringBack,
   isDeleted = false,
 }: {
   participant: Participant;
   isAdmin: boolean;
   deletingIds: string[];
-  onDelete: (peopleId: string, name: string, mode: DeleteMode) => void;
+  onSoftDelete: (peopleId: string, name: string) => void;
+  onHardDelete: (peopleId: string, name: string) => void;
   onBringBack: (peopleId: string, name: string) => void;
   isDeleted?: boolean;
 }) {
   const isDeleting = deletingIds.includes(participant.id);
 
   return (
-    <div className="flex items-start justify-between gap-2 px-3">
+    <div className="flex items-center justify-between gap-2 px-3">
       <div className="min-w-0 flex-1">
         <div className="flex flex-col gap-px">
           <span
@@ -214,26 +154,37 @@ function ParticipantItem({
               <button
                 type="button"
                 aria-label={`Bring back ${participant.name}`}
-                className="rounded p-0.5 text-emerald-600 transition-colors hover:bg-emerald-50"
+                className="rounded-full p-1 text-emerald-600 transition-colors hover:bg-emerald-100"
                 onClick={() => onBringBack(participant.id, participant.name)}
               >
                 <Check size={16} />
               </button>
-              <DeleteMenu
-                name={participant.name}
-                hardOnly
-                onDelete={(mode) =>
-                  onDelete(participant.id, participant.name, mode)
-                }
-              />
+              <button
+                type="button"
+                aria-label={`Permanently delete ${participant.name}`}
+                className="rounded-full p-1 text-red-500 transition-colors hover:bg-red-100"
+                onClick={() => {
+                  if (
+                    confirm(
+                      `Permanently delete ${participant.name}? This cannot be undone.`,
+                    )
+                  ) {
+                    onHardDelete(participant.id, participant.name);
+                  }
+                }}
+              >
+                <Trash2 size={16} />
+              </button>
             </>
           ) : (
-            <DeleteMenu
-              name={participant.name}
-              onDelete={(mode) =>
-                onDelete(participant.id, participant.name, mode)
-              }
-            />
+            <button
+              type="button"
+              aria-label={`Delete ${participant.name}`}
+              className="rounded-full p-1 text-red-500 transition-colors hover:bg-red-100"
+              onClick={() => onSoftDelete(participant.id, participant.name)}
+            >
+              <Trash2 size={16} />
+            </button>
           )}
         </div>
       )}
@@ -245,14 +196,16 @@ function CoupleGroup({
   participants,
   isAdmin,
   deletingIds,
-  onDelete,
+  onSoftDelete,
+  onHardDelete,
   onBringBack,
   isDeleted = false,
 }: {
   participants: Participant[];
   isAdmin: boolean;
   deletingIds: string[];
-  onDelete: (peopleId: string, name: string, mode: DeleteMode) => void;
+  onSoftDelete: (peopleId: string, name: string) => void;
+  onHardDelete: (peopleId: string, name: string) => void;
   onBringBack: (peopleId: string, name: string) => void;
   isDeleted?: boolean;
 }) {
@@ -280,7 +233,8 @@ function CoupleGroup({
             participant={participant}
             isAdmin={isAdmin}
             deletingIds={deletingIds}
-            onDelete={onDelete}
+            onSoftDelete={onSoftDelete}
+            onHardDelete={onHardDelete}
             onBringBack={onBringBack}
             isDeleted={isDeleted}
           />
@@ -298,14 +252,16 @@ function ParticipantList({
   participants,
   isAdmin,
   deletingIds,
-  onDelete,
+  onSoftDelete,
+  onHardDelete,
   onBringBack,
   isDeleted = false,
 }: {
   participants: Participant[];
   isAdmin: boolean;
   deletingIds: string[];
-  onDelete: (peopleId: string, name: string, mode: DeleteMode) => void;
+  onSoftDelete: (peopleId: string, name: string) => void;
+  onHardDelete: (peopleId: string, name: string) => void;
   onBringBack: (peopleId: string, name: string) => void;
   isDeleted?: boolean;
 }) {
@@ -320,7 +276,8 @@ function ParticipantList({
             participants={item.participants}
             isAdmin={isAdmin}
             deletingIds={deletingIds}
-            onDelete={onDelete}
+            onSoftDelete={onSoftDelete}
+            onHardDelete={onHardDelete}
             onBringBack={onBringBack}
             isDeleted={isDeleted}
           />
@@ -337,7 +294,8 @@ function ParticipantList({
               participant={item.participant}
               isAdmin={isAdmin}
               deletingIds={deletingIds}
-              onDelete={onDelete}
+              onSoftDelete={onSoftDelete}
+              onHardDelete={onHardDelete}
               onBringBack={onBringBack}
               isDeleted={isDeleted}
             />
@@ -354,6 +312,27 @@ function ParticipantList({
   );
 }
 
+function ParticipantListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="flex flex-col gap-1" aria-busy="true" aria-label="Loading">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-lg border border-gray-300 bg-gray-50/60 px-3 py-2"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="h-6 w-6 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ParticipantDialog({
   category,
   mutate,
@@ -361,11 +340,14 @@ export default function ParticipantDialog({
   triggerClassName,
 }: {
   category: CategoryType;
-  mutate: () => void;
+  mutate: () => void | Promise<unknown>;
   isAdmin?: boolean;
   triggerClassName?: string;
 }) {
+  const [open, setOpen] = useState(false);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [isHardDeletingAll, setIsHardDeletingAll] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const activeParticipants = category.participants?.filter(
     (participant) => !participant.deletedAt,
@@ -374,39 +356,88 @@ export default function ParticipantDialog({
     (participant) => !!participant.deletedAt,
   );
 
-  const handleDelete = async (
-    peopleId: string,
-    name: string,
-    mode: DeleteMode = "soft",
-  ) => {
-    const isHard = mode === "hard";
-    const toastId = toast.loading(
-      isHard ? `Permanently deleting ${name}` : `Deleting ${name}`,
-    );
+  const refreshParticipants = async () => {
+    setIsRefreshing(true);
+    try {
+      await mutate();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleSoftDelete = async (peopleId: string, name: string) => {
+    const toastId = toast.loading(`Deleting ${name}`);
     try {
       setDeletingIds((prev) => [...prev, peopleId]);
       await axios.post("/api/register/delete", {
         peopleId,
-        type: isHard ? "hard-delete" : "delete",
+        type: "delete",
       });
 
-      toast.success(
-        isHard
-          ? `Permanently deleted ${name}`
-          : `Successfully deleted ${name}`,
-        { id: toastId },
-      );
+      toast.success(`Successfully deleted ${name}`, { id: toastId });
+      await refreshParticipants();
     } catch (error) {
       console.error(error);
-      toast.error(
-        isHard
-          ? `Failed to permanently delete ${name}`
-          : `Failed to delete ${name}`,
-        { id: toastId },
-      );
+      toast.error(`Failed to delete ${name}`, { id: toastId });
     } finally {
       setDeletingIds((prev) => prev.filter((id) => id !== peopleId));
-      mutate();
+    }
+  };
+
+  const handleHardDelete = async (peopleId: string, name: string) => {
+    const toastId = toast.loading(`Permanently deleting ${name}`);
+    try {
+      setDeletingIds((prev) => [...prev, peopleId]);
+      await axios.post("/api/register/delete", {
+        peopleId,
+        type: "hard-delete",
+      });
+
+      toast.success(`Permanently deleted ${name}`, { id: toastId });
+      await refreshParticipants();
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to permanently delete ${name}`, { id: toastId });
+    } finally {
+      setDeletingIds((prev) => prev.filter((id) => id !== peopleId));
+    }
+  };
+
+  const handleHardDeleteAll = async () => {
+    const ids = deletedParticipants?.map((participant) => participant.id) ?? [];
+    if (ids.length === 0) return;
+
+    if (
+      !confirm(
+        `Permanently delete all ${ids.length} soft-deleted participant(s)? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    const toastId = toast.loading("Permanently deleting all...");
+    try {
+      setIsHardDeletingAll(true);
+      setDeletingIds((prev) => [...new Set([...prev, ...ids])]);
+
+      // Sequential to avoid couple-delete races
+      for (const peopleId of ids) {
+        await axios.post("/api/register/delete", {
+          peopleId,
+          type: "hard-delete",
+        });
+      }
+
+      toast.success("Permanently deleted all soft-deleted participants", {
+        id: toastId,
+      });
+      await refreshParticipants();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to permanently delete all", { id: toastId });
+    } finally {
+      setIsHardDeletingAll(false);
+      setDeletingIds((prev) => prev.filter((id) => !ids.includes(id)));
     }
   };
 
@@ -422,12 +453,12 @@ export default function ParticipantDialog({
       toast.success(`Successfully brought back ${name}`, {
         id: toastId,
       });
+      await refreshParticipants();
     } catch (error) {
       console.error(error);
       toast.error(`Failed to bring back ${name}`, { id: toastId });
     } finally {
       setDeletingIds((prev) => prev.filter((id) => id !== peopleId));
-      mutate();
     }
   };
 
@@ -437,8 +468,20 @@ export default function ParticipantDialog({
       ? activeParticipants.slice(category.slot)
       : [];
 
+  const skeletonCount = Math.max(
+    1,
+    Math.min(category.participants?.length ?? 3, 5),
+  );
+
   return (
-    <Dialog>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        // Keep dialog mounted/open while refetching after mutations
+        if (isRefreshing && !nextOpen) return;
+        setOpen(nextOpen);
+      }}
+    >
       <DialogTrigger asChild>
         <Button
           size="lg"
@@ -452,25 +495,32 @@ export default function ParticipantDialog({
       <DialogContent
         hideClose
         className="flex max-h-[min(85dvh,640px)] w-[min(100vw-2rem,28rem)] max-w-none translate-x-[-50%] translate-y-[-50%] flex-col gap-0 overflow-hidden p-0 sm:rounded-xl"
+        onCloseAutoFocus={(event) => event.preventDefault()}
       >
         <PanelHeader
           title="Participants"
           description={category.title}
           closeButton={
-            <DialogClose className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-ring">
+            <DialogClose
+              className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-ring"
+              disabled={isRefreshing}
+            >
               <X className="h-5 w-5" />
               <span className="sr-only">Close</span>
             </DialogClose>
           }
         />
         <PanelBody>
-          {category.participants?.length ? (
+          {isRefreshing ? (
+            <ParticipantListSkeleton count={skeletonCount} />
+          ) : category.participants?.length ? (
             <div className="flex flex-col gap-2">
               <ParticipantList
                 participants={confirmedParticipants ?? []}
                 isAdmin={isAdmin}
                 deletingIds={deletingIds}
-                onDelete={handleDelete}
+                onSoftDelete={handleSoftDelete}
+                onHardDelete={handleHardDelete}
                 onBringBack={handleBringBack}
               />
 
@@ -481,7 +531,8 @@ export default function ParticipantDialog({
                     participants={waitingListParticipants}
                     isAdmin={isAdmin}
                     deletingIds={deletingIds}
-                    onDelete={handleDelete}
+                    onSoftDelete={handleSoftDelete}
+                    onHardDelete={handleHardDelete}
                     onBringBack={handleBringBack}
                   />
                 </>
@@ -495,12 +546,27 @@ export default function ParticipantDialog({
                         ? "more participant(s) that have been deleted"
                         : "more participant(s) that have been deleted, ask admin to bring them back"
                     }
+                    action={
+                      isAdmin ? (
+                        <button
+                          type="button"
+                          disabled={isHardDeletingAll || isRefreshing}
+                          className="shrink-0 rounded bg-red-500 px-1.5 py-1 text-[11px] font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                          onClick={handleHardDeleteAll}
+                        >
+                          {isHardDeletingAll
+                            ? "Deleting..."
+                            : "Delete all permanently"}
+                        </button>
+                      ) : undefined
+                    }
                   />
                   <ParticipantList
                     participants={deletedParticipants}
                     isAdmin={isAdmin}
                     deletingIds={deletingIds}
-                    onDelete={handleDelete}
+                    onSoftDelete={handleSoftDelete}
+                    onHardDelete={handleHardDelete}
                     onBringBack={handleBringBack}
                     isDeleted
                   />

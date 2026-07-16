@@ -63,6 +63,7 @@ export default function CategoryAdminPage() {
   const [summarizeResult, setSummarizeResult] = useState<string>("");
   const [createSaveToCatalog, setCreateSaveToCatalog] = useState(false);
   const [editSaveToCatalog, setEditSaveToCatalog] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   const params = useParams();
   const typeParam = params.type;
@@ -101,19 +102,25 @@ export default function CategoryAdminPage() {
   );
 
   const schedulePending = isSwrPending(scheduleLoading, scheduleValidating);
-  const categoriesPending = isSwrPending(
-    categoriesLoading,
-    categoriesValidating,
-  );
-  const isRefreshing = schedulePending || categoriesPending;
+  const categoriesInitialLoading = categoriesLoading && !data;
+  const showCategoriesSkeleton =
+    categoriesInitialLoading || isManualRefreshing;
+  const isRefreshing =
+    isManualRefreshing ||
+    schedulePending ||
+    categoriesLoading ||
+    categoriesValidating;
 
   const handleRefresh = async () => {
     const toastId = toast.loading("Refreshing...");
+    setIsManualRefreshing(true);
     try {
       await Promise.all([mutateSchedule(), mutate()]);
       toast.success("Data refreshed", { id: toastId });
     } catch {
       toast.error("Failed to refresh", { id: toastId });
+    } finally {
+      setIsManualRefreshing(false);
     }
   };
 
@@ -306,7 +313,7 @@ export default function CategoryAdminPage() {
         </AppDashboardHeader>
       }
     >
-      {categoriesPending ? (
+      {showCategoriesSkeleton ? (
         <CardGridSkeleton count={3} variant="category" />
       ) : (
         <div className={cardGridClass}>
@@ -388,7 +395,7 @@ export default function CategoryAdminPage() {
         </div>
       )}
 
-      {!categoriesPending && data?.length === 0 && (
+      {!showCategoriesSkeleton && data?.length === 0 && (
         <EmptyState
           title="No categories yet"
           description="Create one to get started."

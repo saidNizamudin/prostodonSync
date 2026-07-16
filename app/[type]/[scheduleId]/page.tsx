@@ -336,6 +336,7 @@ export default function CategoryPage() {
   const params = useParams();
   const { type, scheduleId: scheduleKey } = getRouteKeys(params);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   const {
     data: schedule,
@@ -392,11 +393,14 @@ export default function CategoryPage() {
   }, [openTime, shouldSchedule]);
 
   const schedulePending = isSwrPending(scheduleLoading, scheduleValidating);
-  const categoriesPending = isSwrPending(
-    categoriesLoading,
-    categoriesValidating,
-  );
-  const isRefreshing = schedulePending || categoriesPending;
+  const categoriesInitialLoading = categoriesLoading && !categories;
+  const showCategoriesSkeleton =
+    categoriesInitialLoading || isManualRefreshing;
+  const isRefreshing =
+    isManualRefreshing ||
+    schedulePending ||
+    categoriesLoading ||
+    categoriesValidating;
 
   const scheduleDateMeta = schedule
     ? `${format(new Date(schedule.open), "dd MMM yyyy, hh:mm a")} – ${format(
@@ -415,11 +419,14 @@ export default function CategoryPage() {
 
   const handleRefresh = async () => {
     const toastId = toast.loading("Refreshing...");
+    setIsManualRefreshing(true);
     try {
       await Promise.all([mutateSchedule(), mutateCategories()]);
       toast.success("Data refreshed", { id: toastId });
     } catch {
       toast.error("Failed to refresh", { id: toastId });
+    } finally {
+      setIsManualRefreshing(false);
     }
   };
 
@@ -488,7 +495,7 @@ export default function CategoryPage() {
 
   return (
     <AppDashboard header={header} beforeContent={beforeContent}>
-      {categoriesPending ? (
+      {showCategoriesSkeleton ? (
         <CardGridSkeleton
           count={3}
           variant={isActive ? "active" : "category"}
@@ -506,7 +513,7 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {!categoriesPending && categories?.length === 0 && (
+      {!showCategoriesSkeleton && categories?.length === 0 && (
         <EmptyState
           title="No Categories for This Schedule Yet"
           description="Ask an admin to make one"
