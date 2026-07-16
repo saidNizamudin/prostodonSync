@@ -70,6 +70,7 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
+    const createdAt = new Date().toISOString();
     let coupleId: string | null = null;
 
     if (name2) {
@@ -84,28 +85,35 @@ export const POST = async (req: NextRequest) => {
       }
 
       coupleId = couple.id;
-
-      const { error: secondPersonError } = await supabase.from("People").insert({
-        name: name2,
-        notes,
-        categoryId: category.id,
-        coupleId,
-      });
-
-      if (secondPersonError) {
-        throw secondPersonError;
-      }
     }
 
-    const { error: firstPersonError } = await supabase.from("People").insert({
-      name: name1,
-      notes,
-      categoryId: category.id,
-      ...(coupleId ? { coupleId } : {}),
-    });
+    const peopleRows = [
+      {
+        name: name1,
+        notes,
+        categoryId: category.id,
+        createdAt,
+        ...(coupleId ? { coupleId } : {}),
+      },
+      ...(name2 && coupleId
+        ? [
+            {
+              name: name2,
+              notes,
+              categoryId: category.id,
+              createdAt,
+              coupleId,
+            },
+          ]
+        : []),
+    ];
 
-    if (firstPersonError) {
-      throw firstPersonError;
+    const { error: peopleError } = await supabase
+      .from("People")
+      .insert(peopleRows);
+
+    if (peopleError) {
+      throw peopleError;
     }
 
     return NextResponse.json({ message: "Data created" });
