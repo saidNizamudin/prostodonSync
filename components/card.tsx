@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 export const cardBase =
-  "relative flex w-full flex-col overflow-clip rounded-xl border border-gray-300 bg-white shadow-md transition-shadow duration-200";
+  "relative flex w-full flex-1 min-h-0 h-full flex-col overflow-clip rounded-xl border border-gray-300 bg-white shadow-md transition-shadow duration-200";
 
 export const cardGridClass =
   "grid w-full grid-cols-1 items-start gap-2 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(min(100%,400px),1fr))]";
@@ -24,7 +24,7 @@ export function CardContent({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("flex flex-col gap-4 p-3", className)} {...props}>
+    <div className={cn("flex flex-col gap-4 p-3 h-full", className)} {...props}>
       {children}
     </div>
   );
@@ -56,7 +56,7 @@ export function CardActions({
   return (
     <div
       className={cn(
-        "-mx-3 -mb-3 flex shrink-0 flex-wrap border-t border-slate-500",
+        "-mx-3 -mb-3 mt-auto flex shrink-0 flex-wrap border-t border-slate-500",
         className,
       )}
       onClick={(e) => e.stopPropagation()}

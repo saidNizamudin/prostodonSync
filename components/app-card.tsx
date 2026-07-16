@@ -82,33 +82,37 @@ export default function AppCard({
     <Card className={className} onClick={href ? undefined : onClick}>
       {ribbonLabel && <Ribbon variant={ribbonVariant}>{ribbonLabel}</Ribbon>}
       <CardContent className={contentClassName}>
-        <div className="flex min-w-0 shrink-0 flex-col gap-0">
+        <div className="flex min-w-0 shrink-0 flex-col gap-0.5">
           {title && (
             <h3 className="text-md font-semibold leading-snug line-clamp-2">
               {title}
             </h3>
           )}
           {subtitle && (
-            <p className="text-xs font-medium text-gray-700">{subtitle}</p>
+            <p className="line-clamp-2 text-xs font-medium text-gray-700">
+              {subtitle}
+            </p>
           )}
           {description && (
-            <p className="mt-1 text-xs text-gray-500 line-clamp-3">
+            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
               {description}
             </p>
           )}
         </div>
-        {children && <div className="shrink-0">{children}</div>}
-        {footer && <CardFooter>{footer}</CardFooter>}
-        {actions && (
-          <CardActions className={actionsClassName}>{actions}</CardActions>
-        )}
+        <div className="mt-auto flex flex-col gap-4">
+          {children && <div className="mt-auto shrink-0">{children}</div>}
+          {footer && <CardFooter>{footer}</CardFooter>}
+          {actions && (
+            <CardActions className={actionsClassName}>{actions}</CardActions>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 
   if (href) {
     return (
-      <Link href={href} className="block w-full min-w-0">
+      <Link href={href} className="flex-1 min-h-0 h-full block w-full min-w-0">
         {card}
       </Link>
     );
